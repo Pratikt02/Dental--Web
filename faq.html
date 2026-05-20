@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FAQs | Sakthi Dental Clinic</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  
+
+  <!-- FAQ SECTION -->
+  <section class="faq-section">
+    <h1>Frequently Asked Questions</h1>
+    <p class="faq-subtitle">
+      Clear answers to common dental concerns from our experts.
+    </p>
+
+    <div class="faq-container">
+
+      <div class="faq-item">
+        <button class="faq-question">Can medication completely relieve tooth pain?</button>
+        <div class="faq-answer">
+          <p>
+            Not entirely. Medications may provide temporary relief, but long-term relief requires
+            identifying and treating the root cause through professional dental care.
+          </p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">Does teeth scaling damage enamel or create gaps?</button>
+        <div class="faq-answer">
+          <p>
+            No. Scaling safely removes plaque and tartar without damaging enamel.
+            Temporary sensitivity may occur but usually subsides as gums heal.
+          </p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">Can fluorosis stains be removed through scaling?</button>
+        <div class="faq-answer">
+          <p>
+            Scaling removes only surface stains. Fluorosis is an internal stain and may require
+            bleaching, veneers, or crowns for cosmetic improvement.
+          </p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">Can painful teeth be treated with fillings?</button>
+        <div class="faq-answer">
+          <p>
+            Not always. If decay reaches the pulp, root canal treatment or extraction may be needed.
+            Fillings work only when damage is limited to enamel or dentin.
+          </p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">Is a crown necessary after root canal treatment?</button>
+        <div class="faq-answer">
+          <p>
+            Yes. A crown protects the weakened tooth, prevents fractures, and restores chewing strength.
+          </p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">Can milk teeth require root canal treatment?</button>
+        <div class="faq-answer">
+          <p>
+            Yes. If the milk tooth needs to remain for some time, RCT helps preserve it and prevents infection.
+          </p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">How often should I visit a dentist?</button>
+        <div class="faq-answer">
+          <p>
+            Every six months is recommended for routine check-ups, cleaning, and preventive care.
+          </p>
+        </div>
+      </div>
+<!-- BACK BUTTON -->
+  <div class="page-nav">
+    <a href="index.html" class="back-btn">← Back to Home</a>
+  </div>
+    </div>
+  </section>
+
+  <script>
+    const questions = document.querySelectorAll(".faq-question");
+
+    questions.forEach(q => {
+      q.addEventListener("click", () => {
+        q.classList.toggle("active");
+        const answer = q.nextElementSibling;
+        answer.style.maxHeight
+          ? answer.style.maxHeight = null
+          : answer.style.maxHeight = answer.scrollHeight + "px";
+      });
+    });
+  </script>
+
+</body>
+</html>
