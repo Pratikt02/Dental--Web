@@ -32,6 +32,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // Appointment booking
 const appointmentDateInput = document.getElementById("appointmentDate");
+const appointmentTimeInput = document.getElementById("appointmentTime");
+let bookedTimes = [];
 
 if (appointmentDateInput) {
   const today = new Date();
@@ -39,6 +41,16 @@ if (appointmentDateInput) {
     .toISOString()
     .split("T")[0];
   appointmentDateInput.min = localDate;
+  appointmentDateInput.addEventListener("change", async () => {
+    try {
+      const response = await fetch(`/api/availability?date=${appointmentDateInput.value}`);
+      const result = await response.json();
+      bookedTimes = response.ok ? result.bookedTimes : [];
+      appointmentTimeInput?.setCustomValidity("");
+    } catch (error) {
+      bookedTimes = [];
+    }
+  });
 }
 
 document.getElementById("appointmentForm")?.addEventListener("submit", async function (event) {
@@ -48,14 +60,25 @@ document.getElementById("appointmentForm")?.addEventListener("submit", async fun
   const status = document.getElementById("appointmentStatus");
   const submitButton = form.querySelector("button[type='submit']");
 
+  if (appointmentTimeInput && bookedTimes.includes(appointmentTimeInput.value)) {
+    appointmentTimeInput.setCustomValidity("This time is already requested. Please choose another time.");
+    appointmentTimeInput.reportValidity();
+    return;
+  }
+  appointmentTimeInput?.setCustomValidity("");
+
   status.textContent = "Sending your request...";
   status.className = "form-status";
   submitButton.disabled = true;
 
   try {
+    const patientToken = sessionStorage.getItem("sakthiDentalPatientSession");
     const response = await fetch("/api/appointments", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(patientToken ? { Authorization: `Bearer ${patientToken}` } : {})
+      },
       body: JSON.stringify(Object.fromEntries(new FormData(form)))
     });
     const result = await response.json();

@@ -13,8 +13,10 @@
       <h1 id="loginTitle">Appointment Dashboard</h1>
       <p class="intro">Sign in to view appointment requests.</p>
       <form id="loginForm" class="login-form">
-        <label for="adminToken">Admin token</label>
-        <input id="adminToken" type="password" autocomplete="current-password" required>
+        <label for="adminUsername">Username</label>
+        <input id="adminUsername" type="text" autocomplete="username" required>
+        <label for="adminPassword">Password</label>
+        <input id="adminPassword" type="password" autocomplete="current-password" required>
         <button type="submit">View Appointments</button>
         <p id="loginStatus" class="status" role="alert" aria-live="polite"></p>
       </form>

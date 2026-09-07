@@ -5,7 +5,7 @@ const loginStatus = document.getElementById("loginStatus");
 const dashboardStatus = document.getElementById("dashboardStatus");
 const appointmentsBody = document.getElementById("appointmentsBody");
 const searchInput = document.getElementById("searchInput");
-const tokenStorageKey = "sakthiDentalAdminToken";
+const tokenStorageKey = "sakthiDentalAdminSession";
 let appointments = [];
 let adminToken = sessionStorage.getItem(tokenStorageKey) || "";
 
@@ -49,7 +49,9 @@ function renderAppointments() {
       <td>${escapeHtml(formatDate(item.appointmentDate, item.appointmentTime))}</td>
       <td>${escapeHtml(item.treatment)}</td>
       <td><a href="mailto:${escapeHtml(item.email)}">${escapeHtml(item.email)}</a><small>${escapeHtml(item.phone)}</small></td>
-      <td><span class="status-badge ${escapeHtml(item.status)}">${escapeHtml(item.status)}</span></td>
+      <td><select class="status-select ${escapeHtml(item.status)}" data-id="${escapeHtml(item._id)}" aria-label="Update status for ${escapeHtml(item.name)}">
+        ${["pending", "confirmed", "completed", "cancelled"].map(status => `<option ${item.status === status ? "selected" : ""}>${status}</option>`).join("")}
+      </select></td>
     </tr>
   `).join("");
 }
@@ -59,12 +61,9 @@ async function loadAppointments() {
   dashboardStatus.className = "status";
 
   try {
-    const response = await fetch("/api/appointments", {
-      headers: { "x-admin-token": adminToken }
-    });
+    const response = await fetch("/api/appointments", { headers: { Authorization: `Bearer ${adminToken}` } });
     const result = await response.json();
     if (!response.ok) throw new Error(result.errors?.join(" ") || "Unable to load appointments.");
-
     appointments = result.appointments.sort((first, second) =>
       `${first.appointmentDate}T${first.appointmentTime}`.localeCompare(`${second.appointmentDate}T${second.appointmentTime}`)
     );
@@ -75,7 +74,7 @@ async function loadAppointments() {
   } catch (error) {
     dashboardStatus.textContent = error.message;
     dashboardStatus.className = "status error";
-    if (error.message.includes("authorization")) {
+    if (error.message.includes("login")) {
       sessionStorage.removeItem(tokenStorageKey);
       showLogin();
     }
@@ -95,16 +94,21 @@ function showLogin() {
 
 loginForm.addEventListener("submit", async event => {
   event.preventDefault();
-  adminToken = document.getElementById("adminToken").value;
-  loginStatus.textContent = "Checking token...";
+  const username = document.getElementById("adminUsername").value;
+  const password = document.getElementById("adminPassword").value;
+  loginStatus.textContent = "Signing in...";
   loginStatus.className = "status";
 
   try {
-    const response = await fetch("/api/appointments", { headers: { "x-admin-token": adminToken } });
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.errors?.join(" ") || "Invalid token.");
+    if (!response.ok) throw new Error(result.errors?.join(" ") || "Invalid username or password.");
+    adminToken = result.token;
     sessionStorage.setItem(tokenStorageKey, adminToken);
-    appointments = result.appointments;
     showDashboard();
   } catch (error) {
     loginStatus.textContent = error.message;
@@ -115,10 +119,32 @@ loginForm.addEventListener("submit", async event => {
 document.getElementById("logoutButton").addEventListener("click", () => {
   sessionStorage.removeItem(tokenStorageKey);
   adminToken = "";
-  document.getElementById("adminToken").value = "";
+  document.getElementById("adminUsername").value = "";
+  document.getElementById("adminPassword").value = "";
   showLogin();
 });
+
 document.getElementById("refreshButton").addEventListener("click", loadAppointments);
 searchInput.addEventListener("input", renderAppointments);
+
+appointmentsBody.addEventListener("change", async event => {
+  if (!event.target.matches(".status-select")) return;
+  const select = event.target;
+  const response = await fetch(`/api/appointments/${select.dataset.id}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${adminToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ status: select.value })
+  });
+  if (!response.ok) {
+    dashboardStatus.textContent = "Unable to update appointment status.";
+    dashboardStatus.className = "status error";
+    return;
+  }
+  const appointment = appointments.find(item => item._id === select.dataset.id);
+  if (appointment) appointment.status = select.value;
+  renderSummary();
+  dashboardStatus.textContent = "Appointment status updated.";
+  dashboardStatus.className = "status success";
+});
 
 if (adminToken) showDashboard();

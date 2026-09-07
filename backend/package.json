@@ -5,6 +5,13 @@
   "description": "Sakthi Dental Clinic website and appointment backend",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "create-admin": "node create-admin.js",
+    "migrate-json": "node migrate-json.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.4.2",
+    "mongodb": "^7.6.0"
   }
 }

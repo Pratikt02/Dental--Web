@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patient Portal | Sakthi Dental Clinic</title>
+  <link rel="stylesheet" href="css/patient.css">
+</head>
+<body>
+  <main class="patient-shell">
+    <section id="authView" class="auth-panel">
+      <p class="eyebrow">Sakthi Dental Clinic</p>
+      <h1>Your care, in one place.</h1>
+      <p class="lead">Sign in to view your appointment requests, or create a patient account for faster booking.</p>
+      <div class="auth-tabs" role="tablist">
+        <button class="auth-tab active" type="button" data-mode="login">Sign in</button>
+        <button class="auth-tab" type="button" data-mode="register">Create account</button>
+      </div>
+      <form id="patientAuthForm" class="patient-form">
+        <div id="nameField" class="field" hidden>
+          <label for="patientName">Full name</label>
+          <input id="patientName" name="name" autocomplete="name">
+        </div>
+        <div class="field">
+          <label for="patientEmail">Email address</label>
+          <input id="patientEmail" name="email" type="email" autocomplete="email" required>
+        </div>
+        <div id="phoneField" class="field" hidden>
+          <label for="patientPhone">Phone number</label>
+          <input id="patientPhone" name="phone" type="tel" autocomplete="tel">
+        </div>
+        <div class="field">
+          <label for="patientPassword">Password</label>
+          <input id="patientPassword" name="password" type="password" minlength="8" autocomplete="current-password" required>
+        </div>
+        <button type="submit"><span id="authSubmitText">Sign in</span><span aria-hidden="true">→</span></button>
+        <p id="authStatus" class="status" role="alert" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section id="portalView" class="portal-panel" hidden>
+      <header class="portal-header">
+        <div><p class="eyebrow">Patient portal</p><h1 id="welcomeTitle">Your appointments</h1></div>
+        <button id="patientLogout" class="secondary-button" type="button">Sign out</button>
+      </header>
+      <div class="portal-actions"><a href="contact.html">Book another appointment <span aria-hidden="true">→</span></a></div>
+      <p id="portalStatus" class="status" role="status" aria-live="polite"></p>
+      <div id="appointmentList" class="appointment-list"></div>
+    </section>
+  </main>
+  <script src="js/patient.js"></script>
+</body>
+</html>
