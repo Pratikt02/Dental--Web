@@ -30,30 +30,49 @@ document.addEventListener("DOMContentLoaded", function () {
   }, 4000);
 });
 
-// Contact form validation
-document.getElementById("contactForm")?.addEventListener("submit", function (e) {
-  e.preventDefault();
+// Appointment booking
+const appointmentDateInput = document.getElementById("appointmentDate");
 
-  const name = document.getElementById("name").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-  const error = document.getElementById("formError");
+if (appointmentDateInput) {
+  const today = new Date();
+  const localDate = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
+    .toISOString()
+    .split("T")[0];
+  appointmentDateInput.min = localDate;
+}
 
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+document.getElementById("appointmentForm")?.addEventListener("submit", async function (event) {
+  event.preventDefault();
 
-  if (!name || !email || !phone) {
-    error.textContent = "Please fill all required fields.";
-    return;
+  const form = event.currentTarget;
+  const status = document.getElementById("appointmentStatus");
+  const submitButton = form.querySelector("button[type='submit']");
+
+  status.textContent = "Sending your request...";
+  status.className = "form-status";
+  submitButton.disabled = true;
+
+  try {
+    const response = await fetch("/api/appointments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(Object.fromEntries(new FormData(form)))
+    });
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.errors?.join(" ") || "Unable to submit the request.");
+    }
+
+    status.textContent = result.message;
+    status.className = "form-status success";
+    form.reset();
+  } catch (error) {
+    status.textContent = error.message || "Unable to submit the request. Please call the clinic.";
+    status.className = "form-status error";
+  } finally {
+    submitButton.disabled = false;
   }
-
-  if (!emailPattern.test(email)) {
-    error.textContent = "Please enter a valid email address.";
-    return;
-  }
-
-  error.textContent = "";
-  alert("Thank you! Your message has been submitted.");
-  this.reset();
 });
 
 // ====================

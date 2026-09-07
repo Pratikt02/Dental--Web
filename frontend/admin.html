@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | Sakthi Dental Clinic</title>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <main class="admin-shell">
+    <section id="loginView" class="login-panel" aria-labelledby="loginTitle">
+      <p class="eyebrow">Sakthi Dental Clinic</p>
+      <h1 id="loginTitle">Appointment Dashboard</h1>
+      <p class="intro">Sign in to view appointment requests.</p>
+      <form id="loginForm" class="login-form">
+        <label for="adminToken">Admin token</label>
+        <input id="adminToken" type="password" autocomplete="current-password" required>
+        <button type="submit">View Appointments</button>
+        <p id="loginStatus" class="status" role="alert" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section id="dashboardView" class="dashboard" hidden>
+      <header class="dashboard-header">
+        <div>
+          <p class="eyebrow">Sakthi Dental Clinic</p>
+          <h1>Appointment Dashboard</h1>
+        </div>
+        <button id="logoutButton" class="button-secondary" type="button">Sign out</button>
+      </header>
+
+      <div class="summary-grid" aria-label="Appointment summary">
+        <article class="summary-card"><span>Total</span><strong id="totalCount">0</strong></article>
+        <article class="summary-card"><span>Pending</span><strong id="pendingCount">0</strong></article>
+        <article class="summary-card"><span>Upcoming</span><strong id="upcomingCount">0</strong></article>
+      </div>
+
+      <section class="appointments-panel" aria-labelledby="appointmentsTitle">
+        <div class="panel-toolbar">
+          <div>
+            <h2 id="appointmentsTitle">Appointment Requests</h2>
+            <p id="lastUpdated">Not loaded yet</p>
+          </div>
+          <div class="toolbar-actions">
+            <label class="search-box">
+              <span class="sr-only">Search appointments</span>
+              <input id="searchInput" type="search" placeholder="Search patient or treatment">
+            </label>
+            <button id="refreshButton" class="button-secondary" type="button">Refresh</button>
+          </div>
+        </div>
+
+        <p id="dashboardStatus" class="status" role="status" aria-live="polite"></p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Patient</th>
+                <th>Appointment</th>
+                <th>Treatment</th>
+                <th>Contact</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="appointmentsBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+  <script src="js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Book an Appointment | Sakthi Dental Clinic</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<section class="contact-page">
+
+  <div class="contact-hero">
+    <div>
+      <p class="contact-kicker">Sakthi Dental Clinic · Hosur</p>
+      <h1>Care that fits your schedule.</h1>
+      <p class="contact-lede">Tell us what you need and our team will help arrange a comfortable time for your visit.</p>
+    </div>
+    <div class="booking-trust" aria-label="Booking details">
+      <span class="trust-mark">✓</span>
+      <div>
+        <strong>Friendly care, thoughtfully scheduled</strong>
+        <span>Appointment requests are reviewed by our clinic team.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="contact-container">
+
+    <!-- LEFT: FORM -->
+    <div class="form-wrapper">
+  
+  <h2 class="form-title">Book Your Appointment</h2>
+  <p class="form-intro">Share a few details and we will contact you to confirm your visit.</p>
+
+  <form id="appointmentForm" class="contact-form">
+    <div class="form-grid">
+      <div class="form-field">
+        <label for="name">Full name</label>
+        <input id="name" name="name" type="text" autocomplete="name" placeholder="Your name" required>
+      </div>
+
+      <div class="form-field">
+        <label for="phone">Phone number</label>
+        <input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="+91" required>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label for="email">Email address</label>
+      <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-field">
+        <label for="appointmentDate">Preferred date</label>
+        <input id="appointmentDate" name="appointmentDate" type="date" required>
+      </div>
+
+      <div class="form-field">
+        <label for="appointmentTime">Preferred time</label>
+        <input id="appointmentTime" name="appointmentTime" type="time" min="09:00" max="19:00" required>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label for="treatment">Treatment</label>
+      <select id="treatment" name="treatment" required>
+        <option value="">Select a treatment</option>
+        <option>General consultation</option>
+        <option>Teeth Cleaning / Scaling</option>
+        <option>Tooth Filling</option>
+        <option>Tooth Extraction</option>
+        <option>Orthodontic Treatment</option>
+        <option>Root Canal Treatment</option>
+        <option>Other</option>
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label for="message">Additional information <span>(optional)</span></label>
+      <textarea id="message" name="message" maxlength="1000" placeholder="Tell us anything that will help us prepare for your visit."></textarea>
+    </div>
+
+    <button type="submit"><span>Request Appointment</span><span class="submit-arrow" aria-hidden="true">→</span></button>
+    <p id="appointmentStatus" class="form-status" role="status" aria-live="polite"></p>
+  </form>
+
+</div>
+
+    <!-- RIGHT: CONTACT INFO -->
+    <aside class="contact-info">
+      <p class="info-kicker">Visit or call us</p>
+      <h2>We are here for your smile.</h2>
+
+      <div class="contact-detail">
+        <span class="contact-icon" aria-hidden="true">⌖</span>
+        <div><strong>Clinic address</strong><p>B2/8, SBM Layout, Anthivadi,<br>Hosur, Tamil Nadu 635109</p></div>
+      </div>
+
+      <div class="contact-detail">
+        <span class="contact-icon" aria-hidden="true">✉</span>
+        <div><strong>Email us</strong><p><a href="mailto:info@sakthidentalclinic.in">info@sakthidentalclinic.in</a></p></div>
+      </div>
+
+      <div class="contact-detail">
+        <span class="contact-icon" aria-hidden="true">☎</span>
+        <div><strong>Call the clinic</strong><p><a href="tel:+919862890897">+91 9862890897</a><br><a href="tel:+919363298118">+91 9363298118</a></p></div>
+      </div>
+
+      <div class="hours-card">
+        <span>Clinic hours</span>
+        <strong>Every day · 9 AM – 7 PM</strong>
+      </div>
+
+      <a class="info-call" href="tel:+919862890897">Call for immediate help <span aria-hidden="true">→</span></a>
+    </aside>
+    </div>
+
+  </div>
+</section>
+
+<script src="js/main.js"></script>
+
+</body>
+</html>
