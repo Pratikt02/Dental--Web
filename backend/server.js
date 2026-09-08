@@ -8,7 +8,7 @@ const { ObjectId } = require("mongodb");
 const { getDatabase, closeDatabase } = require("./db");
 
 const PORT = Number(process.env.PORT) || 3000;
-const SITE_ROOT = path.join(__dirname, "..", "frontend");
+const SITE_ROOT = path.join(__dirname, "..", "docs");
 const MAX_BODY_SIZE = 10 * 1024;
 const sessions = new Map();
 const contentTypes = {
