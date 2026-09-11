@@ -229,7 +229,7 @@ const server = http.createServer(async (request, response) => {
     console.error(error);
     sendJson(response, error instanceof SyntaxError ? 400 : 500, { success: false, errors: [error instanceof SyntaxError ? "Invalid request data." : "Server or database error."] });
   }
-});
+});     
 
 server.listen(PORT, () => console.log(`Sakthi Dental Clinic is running at http://localhost:${PORT}`));
 process.on("SIGINT", async () => { server.close(); await closeDatabase(); process.exit(0); });
