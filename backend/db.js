@@ -5,7 +5,7 @@ const client = new MongoClient(process.env.MONGODB_URI || "mongodb://127.0.0.1:2
 let database;
 
 async function getDatabase() {
-  if (!database) {
+  if (!database) {        
     await client.connect();
     database = client.db(process.env.MONGODB_DB || "sakthi_dental_clinic");
     await database.collection("appointments").createIndex({ appointmentDate: 1, appointmentTime: 1 });
