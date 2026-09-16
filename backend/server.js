@@ -6,6 +6,7 @@ const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const { ObjectId } = require("mongodb");
 const { getDatabase, closeDatabase } = require("./db");
+const { getTreatmentPricing, buildAppointmentEmail, buildReminderSms } = require("./features");
 
 const PORT = Number(process.env.PORT) || 3000;
 const SITE_ROOT = path.join(__dirname, "..", "docs");
@@ -42,7 +43,8 @@ function validateAppointment(input) {
   const appointment = {
     name: clean(input.name, 100), email: clean(input.email, 160).toLowerCase(), phone: clean(input.phone, 30),
     appointmentDate: clean(input.appointmentDate, 10), appointmentTime: clean(input.appointmentTime, 5),
-    treatment: clean(input.treatment, 100), message: clean(input.message, 1000)
+    treatment: clean(input.treatment, 100), doctor: clean(input.doctor, 100), message: clean(input.message, 1000),
+    price: Number(input.price) || getTreatmentPricing(input.treatment)
   };
   const errors = [];
   if (!appointment.name) errors.push("Name is required.");
@@ -51,7 +53,29 @@ function validateAppointment(input) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(appointment.appointmentDate)) errors.push("A valid appointment date is required.");
   if (!/^\d{2}:\d{2}$/.test(appointment.appointmentTime)) errors.push("A valid appointment time is required.");
   if (!appointment.treatment) errors.push("Please select a treatment.");
+  if (!appointment.price || appointment.price < 0) appointment.price = getTreatmentPricing(appointment.treatment);
   return { appointment, errors };
+}
+
+async function notifyAppointmentCreated(appointment) {
+  const email = buildAppointmentEmail({
+    name: appointment.name,
+    treatment: appointment.treatment,
+    date: appointment.appointmentDate,
+    time: appointment.appointmentTime,
+    price: appointment.price
+  });
+  const sms = buildReminderSms({
+    name: appointment.name,
+    date: appointment.appointmentDate,
+    time: appointment.appointmentTime
+  });
+
+  console.log("EMAIL_CONFIRMATION");
+  console.log(email.subject);
+  console.log(email.body);
+  console.log("SMS_REMINDER");
+  console.log(sms);
 }
 
 function getSession(request) {
@@ -106,6 +130,49 @@ async function handleApi(request, response, url) {
     return;
   }
 
+  if (url.pathname === "/api/auth/forgot-password" && request.method === "POST") {
+    const input = JSON.parse(await readRequestBody(request) || "{}");
+    const email = clean(input.email, 160).toLowerCase();
+    const user = await database.collection("users").findOne({ email });
+    if (!user) {
+      sendJson(response, 200, { success: true, message: "If that account exists, a password reset link has been generated." });
+      return;
+    }
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    await database.collection("users").updateOne(
+      { _id: user._id },
+      { $set: { resetToken, resetTokenExpiresAt: new Date(Date.now() + 30 * 60 * 1000), updatedAt: new Date() } }
+    );
+    sendJson(response, 200, {
+      success: true,
+      message: "If that account exists, a password reset link has been generated.",
+      resetToken,
+      resetExpiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString()
+    });
+    return;
+  }
+
+  if (url.pathname === "/api/auth/reset-password" && request.method === "POST") {
+    const input = JSON.parse(await readRequestBody(request) || "{}");
+    const token = clean(input.token, 200);
+    const newPassword = String(input.newPassword || "");
+    if (newPassword.length < 8) {
+      sendJson(response, 400, { success: false, errors: ["New password must be at least 8 characters long."] });
+      return;
+    }
+    const user = await database.collection("users").findOne({ resetToken: token, resetTokenExpiresAt: { $gt: new Date() } });
+    if (!user) {
+      sendJson(response, 400, { success: false, errors: ["Reset link is invalid or expired."] });
+      return;
+    }
+    await database.collection("users").updateOne(
+      { _id: user._id },
+      { $set: { passwordHash: await bcrypt.hash(newPassword, 12), resetToken: null, resetTokenExpiresAt: null, updatedAt: new Date() } }
+    );
+    sendJson(response, 200, { success: true, message: "Password updated successfully." });
+    return;
+  }
+
   if (url.pathname === "/api/auth/register" && request.method === "POST") {
     const input = JSON.parse(await readRequestBody(request) || "{}");
     const name = clean(input.name, 100);
@@ -146,13 +213,19 @@ async function handleApi(request, response, url) {
     const duplicate = await appointments.findOne({ appointmentDate: appointment.appointmentDate, appointmentTime: appointment.appointmentTime, status: { $nin: ["cancelled"] } });
     if (duplicate) { sendJson(response, 409, { success: false, errors: ["That time slot is already requested. Please choose another time."] }); return; }
     const session = getSession(request);
-    const saved = { ...appointment, status: "pending", createdAt: new Date() };
+    const saved = { ...appointment, status: "pending", createdAt: new Date(), emailSent: false, smsSent: false };
     if (session?.role === "patient") {
       saved.userId = new ObjectId(session.userId);
       saved.name = session.name;
     }
     const result = await appointments.insertOne(saved);
-    sendJson(response, 201, { success: true, message: "Your appointment request has been received.", appointmentId: result.insertedId });
+    await notifyAppointmentCreated(saved);
+    sendJson(response, 201, { success: true, message: "Your appointment request has been received.", appointmentId: result.insertedId, price: appointment.price });
+    return;
+  }
+
+  if (url.pathname === "/api/treatments/pricing" && request.method === "GET") {
+    sendJson(response, 200, { success: true, pricing: Object.fromEntries(Object.entries(require("./features").treatmentPricing).map(([key, value]) => [key, value])) });
     return;
   }
 
@@ -174,14 +247,43 @@ async function handleApi(request, response, url) {
     return;
   }
 
+  if (url.pathname === "/api/appointments/export" && request.method === "GET") {
+    if (!requireRole(request, response, "admin")) return;
+    const data = await appointments.find().sort({ appointmentDate: 1, appointmentTime: 1 }).toArray();
+    const csvRows = [
+      ["Name", "Email", "Phone", "Date", "Time", "Treatment", "Doctor", "Status", "Price", "Notes"],
+      ...data.map(item => [
+        item.name || "",
+        item.email || "",
+        item.phone || "",
+        item.appointmentDate || "",
+        item.appointmentTime || "",
+        item.treatment || "",
+        item.doctor || "",
+        item.status || "",
+        String(item.price || 0),
+        item.adminNotes || ""
+      ])
+    ];
+    const csv = csvRows.map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(",")).join("\n");
+    response.writeHead(200, { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": "attachment; filename=sakthi-appointments.csv" });
+    response.end(csv);
+    return;
+  }
+
   const appointmentMatch = url.pathname.match(/^\/api\/appointments\/([^/]+)$/);
   if (appointmentMatch && request.method === "PATCH") {
     if (!requireRole(request, response, "admin")) return;
-    const status = clean(JSON.parse(await readRequestBody(request) || "{}").status, 20);
-    if (!["pending", "confirmed", "completed", "cancelled"].includes(status)) { sendJson(response, 400, { success: false, errors: ["Invalid appointment status."] }); return; }
+    const payload = JSON.parse(await readRequestBody(request) || "{}");
+    const update = {};
+    if (typeof payload.status === "string") update.status = clean(payload.status, 20);
+    if (typeof payload.doctor === "string") update.doctor = clean(payload.doctor, 100);
+    if (typeof payload.adminNotes === "string") update.adminNotes = clean(payload.adminNotes, 2000);
+    if (typeof payload.price === "number") update.price = payload.price;
+    if (Object.keys(update).length === 0) { sendJson(response, 400, { success: false, errors: ["No valid appointment update provided."] }); return; }
     if (!ObjectId.isValid(appointmentMatch[1])) { sendJson(response, 400, { success: false, errors: ["Invalid appointment ID."] }); return; }
-    const result = await appointments.updateOne({ _id: new ObjectId(appointmentMatch[1]) }, { $set: { status, updatedAt: new Date() } });
-    sendJson(response, result.matchedCount ? 200 : 404, { success: Boolean(result.matchedCount), message: result.matchedCount ? "Appointment status updated." : "Appointment not found." });
+    const result = await appointments.updateOne({ _id: new ObjectId(appointmentMatch[1]) }, { $set: { ...update, updatedAt: new Date() } });
+    sendJson(response, result.matchedCount ? 200 : 404, { success: Boolean(result.matchedCount), message: result.matchedCount ? "Appointment updated." : "Appointment not found." });
     return;
   }
 
@@ -195,11 +297,59 @@ async function handleApi(request, response, url) {
     return;
   }
 
+  if (url.pathname === "/api/my-profile" && request.method === "GET") {
+    if (!requirePatient(request, response)) return;
+    const session = getSession(request);
+    const user = await database.collection("users").findOne({ _id: new ObjectId(session.userId) }, { projection: { passwordHash: 0, resetToken: 0, resetTokenExpiresAt: 0 } });
+    sendJson(response, 200, { success: true, user });
+    return;
+  }
+
+  if (url.pathname === "/api/my-profile" && request.method === "PUT") {
+    if (!requirePatient(request, response)) return;
+    const session = getSession(request);
+    const input = JSON.parse(await readRequestBody(request) || "{}");
+    const name = clean(input.name, 100);
+    const phone = clean(input.phone, 30);
+    const password = String(input.password || "");
+    const update = { name, phone, updatedAt: new Date() };
+    if (password.length >= 8) update.passwordHash = await bcrypt.hash(password, 12);
+    await database.collection("users").updateOne({ _id: new ObjectId(session.userId) }, { $set: update });
+    sendJson(response, 200, { success: true, message: "Profile updated successfully." });
+    return;
+  }
+
   if (url.pathname === "/api/my-appointments" && request.method === "GET") {
     if (!requirePatient(request, response)) return;
     const session = getSession(request);
     const data = await appointments.find({ userId: new ObjectId(session.userId) }).sort({ appointmentDate: -1, appointmentTime: -1 }).toArray();
     sendJson(response, 200, { success: true, appointments: data });
+    return;
+  }
+
+  if (url.pathname === "/api/schedules" && request.method === "GET") {
+    if (!requireRole(request, response, "admin")) return;
+    const schedules = await database.collection("doctorSchedules").find().sort({ day: 1, startTime: 1 }).toArray();
+    sendJson(response, 200, { success: true, schedules });
+    return;
+  }
+
+  if (url.pathname === "/api/schedules" && request.method === "POST") {
+    if (!requireRole(request, response, "admin")) return;
+    const payload = JSON.parse(await readRequestBody(request) || "{}");
+    const record = {
+      doctor: clean(payload.doctor, 100),
+      day: clean(payload.day, 20),
+      startTime: clean(payload.startTime, 5),
+      endTime: clean(payload.endTime, 5),
+      createdAt: new Date()
+    };
+    if (!record.doctor || !record.day || !record.startTime || !record.endTime) {
+      sendJson(response, 400, { success: false, errors: ["Doctor, day, start time, and end time are required."] });
+      return;
+    }
+    const result = await database.collection("doctorSchedules").insertOne(record);
+    sendJson(response, 201, { success: true, message: "Doctor schedule saved.", scheduleId: result.insertedId });
     return;
   }
 

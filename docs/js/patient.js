@@ -4,6 +4,11 @@ const authForm = document.getElementById("patientAuthForm");
 const authStatus = document.getElementById("authStatus");
 const portalStatus = document.getElementById("portalStatus");
 const appointmentList = document.getElementById("appointmentList");
+const forgotPasswordButton = document.getElementById("forgotPasswordButton");
+const forgotPasswordForm = document.getElementById("forgotPasswordForm");
+const resetPasswordForm = document.getElementById("resetPasswordForm");
+const profileForm = document.getElementById("profileForm");
+const profileStatus = document.getElementById("profileStatus");
 const patientTokenKey = "sakthiDentalPatientSession";
 let patientToken = sessionStorage.getItem(patientTokenKey) || "";
 let authMode = "login";
@@ -46,10 +51,25 @@ async function loadAppointments() {
   }
 }
 
+async function loadProfile() {
+  if (!patientToken) return;
+  try {
+    const response = await fetch("/api/my-profile", { headers: { Authorization: `Bearer ${patientToken}` } });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.errors?.join(" ") || "Unable to load profile.");
+    document.getElementById("profileName").value = result.user?.name || "";
+    document.getElementById("profilePhone").value = result.user?.phone || "";
+  } catch (error) {
+    portalStatus.textContent = error.message;
+    portalStatus.className = "status error";
+  }
+}
+
 function showPortal(name) {
   authView.hidden = true;
   portalView.hidden = false;
   document.getElementById("welcomeTitle").textContent = `${name ? `Welcome, ${name}` : "Your appointments"}`;
+  loadProfile();
   loadAppointments();
 }
 
@@ -77,6 +97,53 @@ authForm.addEventListener("submit", async event => {
   }
 });
 
+forgotPasswordButton.addEventListener("click", () => {
+  forgotPasswordForm.hidden = false;
+  resetPasswordForm.hidden = false;
+  authStatus.textContent = "Enter your email to receive a reset link.";
+  authStatus.className = "status";
+});
+
+forgotPasswordForm.addEventListener("submit", async event => {
+  event.preventDefault();
+  const email = new FormData(forgotPasswordForm).get("email");
+  try {
+    const response = await fetch("/api/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.errors?.join(" ") || "Unable to send reset link.");
+    document.getElementById("forgotStatus").textContent = result.message;
+    document.getElementById("forgotStatus").className = "status success";
+    if (result.resetToken) document.getElementById("resetToken").value = result.resetToken;
+  } catch (error) {
+    document.getElementById("forgotStatus").textContent = error.message;
+    document.getElementById("forgotStatus").className = "status error";
+  }
+});
+
+resetPasswordForm.addEventListener("submit", async event => {
+  event.preventDefault();
+  const payload = Object.fromEntries(new FormData(resetPasswordForm));
+  try {
+    const response = await fetch("/api/auth/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.errors?.join(" ") || "Unable to reset password.");
+    document.getElementById("resetStatus").textContent = result.message;
+    document.getElementById("resetStatus").className = "status success";
+    resetPasswordForm.reset();
+  } catch (error) {
+    document.getElementById("resetStatus").textContent = error.message;
+    document.getElementById("resetStatus").className = "status error";
+  }
+});
+
 document.querySelectorAll(".auth-tab").forEach(tab => tab.addEventListener("click", () => showMode(tab.dataset.mode)));
 document.getElementById("patientLogout").addEventListener("click", () => {
   sessionStorage.removeItem(patientTokenKey);
@@ -85,6 +152,26 @@ document.getElementById("patientLogout").addEventListener("click", () => {
   authView.hidden = false;
   authForm.reset();
   showMode("login");
+});
+
+profileForm.addEventListener("submit", async event => {
+  event.preventDefault();
+  const payload = Object.fromEntries(new FormData(profileForm));
+  try {
+    const response = await fetch("/api/my-profile", {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${patientToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.errors?.join(" ") || "Unable to update profile.");
+    profileStatus.textContent = result.message;
+    profileStatus.className = "status success";
+    showPortal(document.getElementById("profileName").value || "Your account");
+  } catch (error) {
+    profileStatus.textContent = error.message;
+    profileStatus.className = "status error";
+  }
 });
 
 appointmentList.addEventListener("click", async event => {

@@ -35,6 +35,29 @@
         </div>
         <button type="submit"><span id="authSubmitText">Sign in</span><span aria-hidden="true">→</span></button>
         <p id="authStatus" class="status" role="alert" aria-live="polite"></p>
+        <button id="forgotPasswordButton" class="link-button" type="button">Forgot password?</button>
+      </form>
+
+      <form id="forgotPasswordForm" class="patient-form secondary-form" hidden>
+        <div class="field">
+          <label for="forgotEmail">Email address</label>
+          <input id="forgotEmail" name="email" type="email" required>
+        </div>
+        <button type="submit">Send reset link</button>
+        <p id="forgotStatus" class="status" role="alert" aria-live="polite"></p>
+      </form>
+
+      <form id="resetPasswordForm" class="patient-form secondary-form" hidden>
+        <div class="field">
+          <label for="resetToken">Reset token</label>
+          <input id="resetToken" name="token" type="text" placeholder="Paste the reset token" required>
+        </div>
+        <div class="field">
+          <label for="newPassword">New password</label>
+          <input id="newPassword" name="newPassword" type="password" minlength="8" required>
+        </div>
+        <button type="submit">Update password</button>
+        <p id="resetStatus" class="status" role="alert" aria-live="polite"></p>
       </form>
     </section>
 
@@ -44,6 +67,23 @@
         <button id="patientLogout" class="secondary-button" type="button">Sign out</button>
       </header>
       <div class="portal-actions"><a href="contact.html">Book another appointment <span aria-hidden="true">→</span></a></div>
+      <form id="profileForm" class="profile-form">
+        <h2>Update profile</h2>
+        <div class="field">
+          <label for="profileName">Full name</label>
+          <input id="profileName" name="name" type="text" autocomplete="name">
+        </div>
+        <div class="field">
+          <label for="profilePhone">Phone</label>
+          <input id="profilePhone" name="phone" type="tel" autocomplete="tel">
+        </div>
+        <div class="field">
+          <label for="profilePassword">New password</label>
+          <input id="profilePassword" name="password" type="password" minlength="8" placeholder="Leave blank to keep current password">
+        </div>
+        <button type="submit">Save profile</button>
+        <p id="profileStatus" class="status" role="status" aria-live="polite"></p>
+      </form>
       <p id="portalStatus" class="status" role="status" aria-live="polite"></p>
       <div id="appointmentList" class="appointment-list"></div>
     </section>

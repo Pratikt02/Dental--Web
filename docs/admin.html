@@ -37,6 +37,27 @@
         <article class="summary-card"><span>Upcoming</span><strong id="upcomingCount">0</strong></article>
       </div>
 
+      <div class="dashboard-layout">
+        <section class="chart-panel" aria-labelledby="chartTitle">
+          <h2 id="chartTitle">Status overview</h2>
+          <div id="chartContainer" class="chart-container"></div>
+        </section>
+
+        <section class="schedule-panel" aria-labelledby="scheduleTitle">
+          <h2 id="scheduleTitle">Doctor schedule</h2>
+          <form id="scheduleForm" class="schedule-form">
+            <input id="doctorName" name="doctor" type="text" placeholder="Doctor name" required>
+            <input id="scheduleDay" name="day" type="text" placeholder="Day" required>
+            <div class="time-row">
+              <input id="scheduleStart" name="startTime" type="time" required>
+              <input id="scheduleEnd" name="endTime" type="time" required>
+            </div>
+            <button type="submit" class="button-secondary">Save schedule</button>
+          </form>
+          <div id="scheduleList" class="schedule-list"></div>
+        </section>
+      </div>
+
       <section class="appointments-panel" aria-labelledby="appointmentsTitle">
         <div class="panel-toolbar">
           <div>
@@ -48,6 +69,7 @@
               <span class="sr-only">Search appointments</span>
               <input id="searchInput" type="search" placeholder="Search patient or treatment">
             </label>
+            <button id="exportButton" class="button-secondary" type="button">Export CSV</button>
             <button id="refreshButton" class="button-secondary" type="button">Refresh</button>
           </div>
         </div>
