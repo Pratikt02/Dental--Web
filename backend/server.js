@@ -381,6 +381,19 @@ const server = http.createServer(async (request, response) => {
   }
 });  
 
-server.listen(PORT, () => console.log(`Sakthi Dental Clinic is running at http://localhost:${PORT}`));
+async function startServer() {
+  try {
+    await getDatabase();
+
+    server.listen(PORT, () => {
+      console.log(`Sakthi Dental Clinic is running at http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("❌ Failed to start server:", error);
+    process.exit(1);
+  }
+}
+
+startServer();
 process.on("SIGINT", async () => { server.close(); await closeDatabase(); process.exit(0); });
              

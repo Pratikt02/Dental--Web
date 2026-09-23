@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard | Sakthi Dental Clinic</title>
   <link rel="stylesheet" href="css/admin.css">
+  <script src="js/theme.js" defer></script>
 </head>
 <body>
   <main class="admin-shell">         
@@ -44,16 +45,58 @@
         </section>
 
         <section class="schedule-panel" aria-labelledby="scheduleTitle">
-          <h2 id="scheduleTitle">Doctor schedule</h2>
-          <form id="scheduleForm" class="schedule-form">
-            <input id="doctorName" name="doctor" type="text" placeholder="Doctor name" required>
-            <input id="scheduleDay" name="day" type="text" placeholder="Day" required>
-            <div class="time-row">
-              <input id="scheduleStart" name="startTime" type="time" required>
-              <input id="scheduleEnd" name="endTime" type="time" required>
+          <div class="schedule-header">
+            <div>
+              <p class="mini-label">Clinic planning</p>
+              <h2 id="scheduleTitle">Doctor schedule</h2>
             </div>
+            <span class="schedule-badge">Live</span>
+          </div>
+
+          <form id="scheduleForm" class="schedule-form">
+            <div class="schedule-form-grid">
+              <label class="field-block">
+                <span>Doctor name</span>
+                <input id="doctorName" name="doctor" type="text" placeholder="e.g. Dr. Kavitha" required>
+              </label>
+
+              <label class="field-block">
+                <span>Day</span>
+                <select id="scheduleDay" name="day" required>
+                  <option value="">Select day</option>
+                  <option>Monday</option>
+                  <option>Tuesday</option>
+                  <option>Wednesday</option>
+                  <option>Thursday</option>
+                  <option>Friday</option>
+                  <option>Saturday</option>
+                  <option>Sunday</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="time-row">
+              <label class="field-block">
+                <span>Start time</span>
+                <input id="scheduleStart" name="startTime" type="time" required>
+              </label>
+
+              <label class="field-block">
+                <span>End time</span>
+                <input id="scheduleEnd" name="endTime" type="time" required>
+              </label>
+            </div>
+
             <button type="submit" class="button-secondary">Save schedule</button>
           </form>
+
+          <div class="schedule-summary">
+            <div>
+              <strong>Clinic hours</strong>
+              <span>Mon - Sat · 9:00 AM to 7:00 PM</span>
+            </div>
+          </div>
+
           <div id="scheduleList" class="schedule-list"></div>
         </section>
       </div>

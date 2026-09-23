@@ -1956,3 +1956,178 @@ textarea:focus-visible {
   .assurance-banners img { height: 200px; }
   .why-us, .testimonials, .facilities, .dental-tips, .core-treatments { padding: 76px 6%; }
 }
+
+/* ==================== */
+/* COHESIVE PUBLIC THEME */
+/* ==================== */
+:root {
+  --primary: #087f8c;
+  --secondary: #eef8f7;
+  --accent: #ef8354;
+  --dark: #143642;
+  --light: #ffffff;
+  --surface: #f7fbfa;
+  --muted: #607b82;
+  --line: #d7e9e7;
+}
+
+body {
+  color: var(--dark);
+  background: var(--surface);
+  font-family: "DM Sans", "Poppins", sans-serif;
+}
+
+.header {
+  padding: 14px clamp(20px, 6vw, 92px);
+  border-bottom: 1px solid rgba(215, 233, 231, 0.75);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 10px 30px rgba(20, 54, 66, 0.06);
+  backdrop-filter: blur(16px);
+}
+
+.logo { color: var(--dark); font-family: "Space Grotesk", sans-serif; }
+.logo img { height: 40px; }
+.logo span { font-size: 18px; }
+.nav { gap: 18px; }
+.nav a { color: #45636a; font-size: 13px; font-weight: 700; }
+.nav a::after { background: var(--accent); }
+.nav .nav-btn {
+  padding: 11px 17px;
+  background: var(--dark);
+  box-shadow: 0 10px 20px rgba(20, 54, 66, 0.16);
+}
+.nav .patient-nav-link { color: var(--primary); }
+
+.hero {
+  background:
+    linear-gradient(90deg, rgba(247, 251, 250, 0.98) 0%, rgba(247, 251, 250, 0.9) 43%, rgba(247, 251, 250, 0.18) 100%),
+    url("../treatments/Teeth%20Cleaning.png") center / cover no-repeat;
+}
+.hero h1, .contact-hero h1 { color: var(--dark); font-family: "Space Grotesk", sans-serif; }
+.hero-kicker, .section-kicker, .contact-kicker, .info-kicker { color: var(--primary); }
+.hero p:not(.hero-kicker), .contact-lede { color: var(--muted); }
+.btn-primary, .contact-form button { background: var(--primary); box-shadow: 0 12px 26px rgba(8, 127, 140, 0.22); }
+.btn-secondary { border-color: var(--primary); color: var(--primary); }
+.btn-primary:hover, .btn-secondary:hover { box-shadow: 0 14px 28px rgba(20, 54, 66, 0.15); }
+.hero-side-number { color: var(--accent); }
+.hero-side-copy strong, .hero-side-copy span:last-child { color: var(--dark); }
+
+.assurance, .testimonials { background: #eaf6f4; }
+.assurance-content h2, .why-us h2, .core-treatments .section-title,
+.testimonials .section-title, .facilities .section-title { color: var(--dark); }
+.assurance-banners img { box-shadow: 0 18px 36px rgba(20, 54, 66, 0.13); }
+.trust-strip { border-color: #c7e3df; }
+.trust-strip div { border-color: #c7e3df; }
+.trust-strip strong { color: var(--accent); }
+.why-us, .facilities, .dental-tips { background: #fbfdfc; }
+.why-grid .card, .treatment-card, .facility-item, .tip-card, .testimonial-card, .vm-card, .doctor-list li, .faq-item {
+  border-color: var(--line);
+  box-shadow: 0 16px 36px rgba(20, 54, 66, 0.07);
+}
+.why-grid .card::before { background: var(--accent); }
+.why-grid .card h3, .treatment-card h3, .treatment-card h4 { color: var(--dark); }
+.why-grid .card p, .treatment-card p, .facility-item span { color: var(--muted); }
+.core-treatments { background: #f1f8f7; }
+.treatment-card img { background: #e8f3f1; }
+.treatment-card:hover { box-shadow: 0 22px 44px rgba(8, 127, 140, 0.15); }
+.call-float { background: var(--accent); }
+
+.about-page, .treatments-page, .faq-section, .privacy-page { background: linear-gradient(180deg, #f1f8f7 0%, #fbfdfc 100%); }
+.about-header h1, .page-header h1, .faq-section h1, .privacy-page h1 { color: var(--dark); font-family: "Space Grotesk", sans-serif; }
+.about-header .subtitle, .vm-card h2, .privacy-page h2 { color: var(--primary); }
+.vm-card::before { background: var(--accent); }
+.doctor-list li::before { color: var(--accent); }
+.faq-question:hover, .faq-question.active { background: #eaf6f4; color: var(--primary); }
+.faq-question::after { color: var(--accent); }
+.faq-answer p, .about-content, .privacy-page { color: var(--muted); }
+.back-btn { background: var(--dark); border-color: var(--dark); }
+.back-btn:hover { background: var(--primary); border-color: var(--primary); }
+
+.contact-page {
+  background:
+    radial-gradient(circle at 8% 10%, rgba(239, 131, 84, 0.13), transparent 27%),
+    linear-gradient(135deg, #f5fbfa 0%, #eaf6f4 100%);
+}
+.contact-hero h1 { letter-spacing: -0.045em; }
+.booking-trust { border-color: rgba(8, 127, 140, 0.18); }
+.form-wrapper { border-color: var(--line); box-shadow: 0 24px 70px rgba(20, 54, 66, 0.1); }
+.form-title { color: var(--dark); }
+.contact-form input:focus, .contact-form textarea:focus, .contact-form select:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(8, 127, 140, 0.11); }
+.contact-info { background: linear-gradient(145deg, #143642 0%, #087f8c 100%); }
+.contact-info .info-kicker, .contact-icon, .hours-card span { color: #f7b08f; }
+.contact-detail strong { color: #d9f4f1; }
+
+@media (max-width: 768px) {
+  .header { padding-inline: 18px; }
+  .nav { justify-content: flex-start; gap: 14px; }
+  .nav .nav-btn { padding: 9px 13px; }
+}
+
+/* ==================== */
+/* DARK MODE */
+/* ==================== */
+.theme-toggle {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 1001;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 9px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  background: var(--dark);
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+.theme-toggle-icon { font-size: 17px; line-height: 1; }
+.theme-toggle:hover { transform: translateY(-2px); }
+body:has(.call-float) .theme-toggle { bottom: 82px; }
+
+body.dark-mode {
+  --dark: #e9f5f3;
+  --surface: #10252b;
+  --muted: #a5c0c2;
+  --line: #2c4b50;
+  --secondary: #17363c;
+  color: var(--dark);
+  background: #10252b;
+}
+body.dark-mode .header { border-color: #29464b; background: rgba(16, 37, 43, .9); }
+body.dark-mode .logo, body.dark-mode .nav a { color: #e9f5f3; }
+body.dark-mode .nav .nav-btn { background: #ef8354; color: #10252b; }
+body.dark-mode .hero { background: linear-gradient(90deg, rgba(16, 37, 43, .97) 0%, rgba(16, 37, 43, .86) 45%, rgba(16, 37, 43, .34) 100%), url("../treatments/Teeth%20Cleaning.png") center / cover no-repeat; }
+body.dark-mode .hero h1, body.dark-mode .contact-hero h1, body.dark-mode .hero-side-copy strong { color: #f3fbfa; }
+body.dark-mode .hero p:not(.hero-kicker), body.dark-mode .hero-side-copy span:last-child { color: #b2cccd; }
+body.dark-mode .btn-secondary { background: #17363c; color: #9ee1d9; }
+body.dark-mode .hero-side-panel, body.dark-mode .booking-trust { border-color: #3b5b60; background: rgba(23, 54, 60, .82); }
+body.dark-mode .assurance, body.dark-mode .testimonials { background: #17363c; }
+body.dark-mode .why-us, body.dark-mode .facilities, body.dark-mode .dental-tips { background: #10252b; }
+body.dark-mode .core-treatments { background: #132e34; }
+body.dark-mode .assurance-content h2, body.dark-mode .why-us h2, body.dark-mode .core-treatments .section-title, body.dark-mode .testimonials .section-title, body.dark-mode .facilities .section-title, body.dark-mode .dental-tips h2 { color: #e9f5f3; }
+body.dark-mode .trust-strip { border-color: #34565b; }
+body.dark-mode .trust-strip div { border-color: #34565b; }
+body.dark-mode .trust-strip span { color: #b2cccd; }
+body.dark-mode .why-grid .card, body.dark-mode .treatment-card, body.dark-mode .facility-item, body.dark-mode .tip-card, body.dark-mode .testimonial-card, body.dark-mode .vm-card, body.dark-mode .doctor-list li, body.dark-mode .faq-item { border-color: #2c4b50; background: #17363c; box-shadow: 0 16px 36px rgba(0, 0, 0, .16); }
+body.dark-mode .why-grid .card h3, body.dark-mode .treatment-card h3, body.dark-mode .treatment-card h4, body.dark-mode .doctor-list li, body.dark-mode .page-header h1, body.dark-mode .about-header h1, body.dark-mode .faq-section h1 { color: #e9f5f3; }
+body.dark-mode .why-grid .card p, body.dark-mode .treatment-card p, body.dark-mode .facility-item span, body.dark-mode .faq-answer p, body.dark-mode .about-content, body.dark-mode .page-header p { color: #a5c0c2; }
+body.dark-mode .treatment-card img { background: #21464c; }
+body.dark-mode .about-page, body.dark-mode .treatments-page, body.dark-mode .faq-section, body.dark-mode .privacy-page { background: linear-gradient(180deg, #132e34 0%, #10252b 100%); }
+body.dark-mode .faq-question { color: #e9f5f3; }
+body.dark-mode .contact-page { background: radial-gradient(circle at 8% 10%, rgba(239, 131, 84, .16), transparent 27%), linear-gradient(135deg, #132e34 0%, #10252b 100%); }
+body.dark-mode .form-wrapper { border-color: #2c4b50; background: #17363c; }
+body.dark-mode .form-title, body.dark-mode .contact-form label { color: #e9f5f3; }
+body.dark-mode .form-intro, body.dark-mode .contact-lede { color: #a5c0c2; }
+body.dark-mode .contact-form input, body.dark-mode .contact-form textarea, body.dark-mode .contact-form select { border-color: #36575c; background: #10252b; color: #e9f5f3; }
+body.dark-mode .contact-form input::placeholder, body.dark-mode .contact-form textarea::placeholder { color: #789397; }
+body.dark-mode .theme-toggle { background: #ef8354; color: #10252b; }
+
+@media (max-width: 520px) {
+  body:has(.call-float) .theme-toggle { right: 14px; bottom: 76px; }
+  body:has(.call-float) .call-float { right: 14px; bottom: 18px; }
+}

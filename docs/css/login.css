@@ -28,3 +28,18 @@ h1 { margin: 0; font-size: clamp(38px, 6vw, 62px); letter-spacing: -.04em; line-
 .portal-footer { margin: 32px 0 0; color: var(--muted); text-align: center; font-size: 13px; }.portal-footer a { color: var(--blue); text-decoration: none; }.portal-footer a:hover { text-decoration: underline; }
 @keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
 @media (max-width: 650px) { .portal-shell { padding-top: 28px; }.portal-intro { margin-top: 11vh; margin-bottom: 30px; }.portal-options { grid-template-columns: 1fr; }.portal-card { min-height: 300px; padding: 24px; } }
+
+/* Shared clinic brand accents */
+:root { --blue: #087f8c; --ink: #143642; --muted: #607b82; --line: #d7e9e7; }
+body { background: radial-gradient(circle at 5% 5%, #d9f1ed, transparent 34%), linear-gradient(135deg, #fbfdfc, #eef8f7); }
+.portal-card { border-color: var(--line); box-shadow: 0 20px 55px rgba(20, 54, 66, .1); }
+.patient-card { border-top-color: #ef8354; }
+.patient-card .card-icon { background: #ef8354; }
+.staff-card { border-top-color: #087f8c; }
+.portal-card:hover { border-color: #9acfc9; box-shadow: 0 28px 65px rgba(20, 54, 66, .16); }
+
+body.dark-mode { color: #e9f5f3; background: radial-gradient(circle at 5% 5%, #21464c, transparent 34%), #10252b; }
+body.dark-mode .brand, body.dark-mode .portal-card h2 { color: #e9f5f3; }
+body.dark-mode .portal-intro > p:last-child, body.dark-mode .portal-card p, body.dark-mode .portal-footer { color: #a5c0c2; }
+body.dark-mode .portal-card { border-color: #2c4b50; background: #17363c; }
+body.dark-mode .theme-toggle { background: #ef8354; color: #10252b; }

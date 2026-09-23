@@ -25,3 +25,20 @@ h1 { margin: 0; font-size: clamp(30px, 5vw, 48px); line-height: 1.05; }
 .secondary-button, .cancel-button { padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--blue); cursor: pointer; font-weight: 700; }.secondary-button:hover, .cancel-button:hover { border-color: var(--blue); }
 .portal-actions { margin-bottom: 20px; }.portal-actions a { color: var(--blue); font-weight: 700; text-decoration: none; }.appointment-list { display: grid; gap: 12px; margin-top: 20px; }.appointment-card { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }.appointment-label { color: var(--blue); font-size: 12px; font-weight: 700; text-transform: uppercase; }.appointment-card h2 { margin: 8px 0 5px; font-size: 20px; }.appointment-card p { margin: 0; color: var(--muted); font-size: 14px; }.appointment-meta { display: grid; justify-items: end; gap: 12px; }.appointment-status { padding: 6px 9px; border-radius: 999px; color: #885a05; background: #fff4d6; font-size: 12px; font-weight: 700; text-transform: capitalize; }.appointment-status.confirmed { color: #175b39; background: #e7f6ed; }.appointment-status.completed { color: #1769aa; background: #e9f3fb; }.appointment-status.cancelled { color: #b42318; background: #fff0ee; }.empty-state { color: var(--muted); text-align: center; }
 @media (max-width: 600px) { .patient-shell { width: min(100% - 20px, 960px); padding: 24px 0; }.portal-header, .appointment-card { align-items: stretch; flex-direction: column; }.appointment-meta { justify-items: start; }.secondary-button { align-self: flex-start; } }
+
+/* Shared clinic brand accents */
+:root { --blue: #087f8c; --ink: #143642; --muted: #607b82; --line: #d7e9e7; }
+body { background: radial-gradient(circle at 10% 0%, #d9f1ed, transparent 34%), #f4fbfa; }
+.auth-panel, .portal-panel { border-color: var(--line); box-shadow: 0 24px 70px rgba(20, 54, 66, .12); }
+.auth-tab.active { border-color: #ef8354; color: #087f8c; }
+.patient-form button { background: #087f8c; box-shadow: 0 10px 22px rgba(8, 127, 140, .18); }
+.appointment-card { border-color: var(--line); box-shadow: 0 12px 28px rgba(20, 54, 66, .06); }
+
+body.dark-mode { color: #e9f5f3; background: radial-gradient(circle at 10% 0%, #21464c, transparent 34%), #10252b; }
+body.dark-mode .auth-panel, body.dark-mode .portal-panel { border-color: #2c4b50; background: #17363c; }
+body.dark-mode .lead, body.dark-mode .field label, body.dark-mode .status { color: #a5c0c2; }
+body.dark-mode .field input { border-color: #36575c; background: #10252b; color: #e9f5f3; }
+body.dark-mode .appointment-card { border-color: #2c4b50; background: #10252b; }
+body.dark-mode .appointment-card h2, body.dark-mode .appointment-card p { color: #e9f5f3; }
+body.dark-mode .secondary-button, body.dark-mode .cancel-button { border-color: #36575c; background: #17363c; color: #9ee1d9; }
+body.dark-mode .theme-toggle { background: #ef8354; color: #10252b; }
