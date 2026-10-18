@@ -24,16 +24,30 @@ function formatCurrency(value) {
   }).format(amount);
 }
 
-function buildAppointmentEmail({ name, treatment, date, time, price }) {
+const CLINIC_NAME = "Dental Pro";
+
+function buildAppointmentEmail({ name, treatment, date, time, price, status = "pending" }) {
   const formattedPrice = formatCurrency(price || getTreatmentPricing(treatment));
+  const subject = status === "pending"
+    ? `Appointment Request Received - ${CLINIC_NAME}`
+    : `Appointment ${status} - ${CLINIC_NAME}`;
+
+  const statusMessage = status === "pending"
+    ? "Your appointment request has been received successfully."
+    : `Your appointment status is now: ${status}.`;
+
   return {
-    subject: "Appointment Confirmation - Sakthi Dental Clinic",
-    body: `Hello ${name || "Patient"},\n\nYour appointment request has been received at Sakthi Dental Clinic.\n\nTreatment: ${treatment}\nDate: ${date}\nTime: ${time}\nEstimated Cost: ${formattedPrice}\n\nOur clinic team will confirm the booking shortly.\n\nThank you.\nSakthi Dental Clinic`
+    subject,
+    body: `Hello ${name || "Patient"},\n\nThank you for choosing ${CLINIC_NAME}.\n\n${statusMessage}\n\nOur clinic team will confirm your appointment shortly. If you have any questions or need to make changes, please contact the clinic directly.\n\nAppointment Details:\n- Treatment: ${treatment}\n- Date: ${date}\n- Time: ${time}\n- Estimated Cost: ${formattedPrice}\n\nPlease arrive 30 minutes before your scheduled appointment.\n\nThank you for trusting ${CLINIC_NAME} with your dental care.\n\nRegards,\n${CLINIC_NAME} Team`
   };
 }
 
 function buildReminderSms({ name, date, time }) {
-  return `Hi ${name || "Patient"}, this is a reminder from Sakthi Dental Clinic for your appointment on ${date} at ${time}. Please arrive 10 minutes early.`;
+  return `Hi ${name || "Patient"}, this is a reminder from ${CLINIC_NAME} for your appointment on ${date} at ${time}. Please arrive 30 minutes early.`;
+}
+
+function buildAppointmentStatusMessage({ name, date, time, status }) {
+  return `Hi ${name || "Patient"}, your ${CLINIC_NAME} appointment on ${date} at ${time} is now ${status}. Please contact the clinic if you have questions.`;
 }
 
 module.exports = {
@@ -41,5 +55,6 @@ module.exports = {
   getTreatmentPricing,
   formatCurrency,
   buildAppointmentEmail,
-  buildReminderSms
+  buildReminderSms,
+  buildAppointmentStatusMessage
 };

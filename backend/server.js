@@ -6,7 +6,13 @@ const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const { ObjectId } = require("mongodb");
 const { getDatabase, closeDatabase } = require("./db");
-const { getTreatmentPricing, buildAppointmentEmail, buildReminderSms } = require("./features");
+const {
+  getTreatmentPricing,
+  buildAppointmentEmail,
+  buildReminderSms,
+  buildAppointmentStatusMessage
+} = require("./features");
+const { sendEmail } = require("./notifications");
 
 const PORT = Number(process.env.PORT) || 3000;
 const SITE_ROOT = path.join(__dirname, "..", "docs");
@@ -44,6 +50,7 @@ function validateAppointment(input) {
     name: clean(input.name, 100), email: clean(input.email, 160).toLowerCase(), phone: clean(input.phone, 30),
     appointmentDate: clean(input.appointmentDate, 10), appointmentTime: clean(input.appointmentTime, 5),
     treatment: clean(input.treatment, 100), doctor: clean(input.doctor, 100), message: clean(input.message, 1000),
+    notificationPreferences: { email: true, sms: false, whatsapp: false },
     price: Number(input.price) || getTreatmentPricing(input.treatment)
   };
   const errors = [];
@@ -57,25 +64,133 @@ function validateAppointment(input) {
   return { appointment, errors };
 }
 
-async function notifyAppointmentCreated(appointment) {
+async function notifyAppointment(database, appointmentId, appointment, event, onlyChannels) {
+  const status = appointment.status || "pending";
   const email = buildAppointmentEmail({
     name: appointment.name,
     treatment: appointment.treatment,
     date: appointment.appointmentDate,
     time: appointment.appointmentTime,
-    price: appointment.price
+    price: appointment.price,
+    status
   });
-  const sms = buildReminderSms({
-    name: appointment.name,
-    date: appointment.appointmentDate,
-    time: appointment.appointmentTime
-  });
+  if (event.startsWith("reminder")) email.subject = "Appointment Reminder - Dental Pro";
+  const text = event === "request"
+    ? `Hi ${appointment.name || "Patient"}, your appointment request for ${appointment.treatment} on ${appointment.appointmentDate} at ${appointment.appointmentTime} has been received. Our clinic will confirm it shortly.`
+    : event === "status"
+      ? buildAppointmentStatusMessage({
+        name: appointment.name,
+        date: appointment.appointmentDate,
+        time: appointment.appointmentTime,
+        status
+      })
+      : buildReminderSms({
+        name: appointment.name,
+        date: appointment.appointmentDate,
+        time: appointment.appointmentTime
+      });
+  const preferences = appointment.notificationPreferences || { email: true, sms: false, whatsapp: false };
+  const channels = [
+    { name: "email", enabled: preferences.email !== false, send: () => sendEmail({ to: appointment.email, subject: email.subject, text: event.startsWith("reminder") ? text : email.body }) }
+  ];
 
-  console.log("EMAIL_CONFIRMATION");
-  console.log(email.subject);
-  console.log(email.body);
-  console.log("SMS_REMINDER");
-  console.log(sms);
+  await Promise.all(channels.filter(channel =>
+    channel.enabled && (!onlyChannels || onlyChannels.includes(channel.name))
+  ).map(async channel => {
+    const previous = appointment.notificationDelivery?.[event]?.[channel.name];
+    const attemptCount = (previous?.attemptCount || 0) + 1;
+    const attemptedAt = new Date();
+    let delivery;
+    try {
+      await channel.send();
+      delivery = { status: "sent", sentAt: new Date(), attemptCount };
+    } catch (error) {
+      console.error(`Appointment ${event} ${channel.name} notification failed:`, error);
+      delivery = {
+        status: "failed",
+        attemptedAt,
+        attemptCount,
+        ...(attemptCount < 5 ? { retryAt: new Date(attemptedAt.getTime() + 5 * 60 * 1000) } : {}),
+        error: String(error.message || error).slice(0, 500)
+      };
+    }
+    try {
+      const update = { [`notificationDelivery.${event}.${channel.name}`]: delivery };
+      if (event === "request" && channel.name === "email") update.emailSent = delivery.status === "sent";
+      await database.collection("appointments").updateOne({ _id: appointmentId }, { $set: update });
+    } catch (error) {
+      console.error(`Unable to record ${event} ${channel.name} notification delivery:`, error);
+    }
+  }));
+}
+
+async function retryFailedNotifications(database, now) {
+  const retryable = ["request", "status"].flatMap(event =>
+    ["email"].map(channel => ({
+      [`notificationDelivery.${event}.${channel}.status`]: "failed",
+      [`notificationDelivery.${event}.${channel}.attemptCount`]: { $lt: 5 },
+      [`notificationDelivery.${event}.${channel}.retryAt`]: { $lte: now }
+    }))
+  );
+  const appointments = await database.collection("appointments").find({ $or: retryable }).limit(100).toArray();
+  for (const appointment of appointments) {
+    for (const event of ["request", "status"]) {
+      const dueChannels = ["email"].filter(channel => {
+        const delivery = appointment.notificationDelivery?.[event]?.[channel];
+        return delivery?.status === "failed" && delivery.attemptCount < 5 &&
+          delivery.retryAt && new Date(delivery.retryAt) <= now;
+      });
+      if (dueChannels.length) await notifyAppointment(database, appointment._id, appointment, event, dueChannels);
+    }
+  }
+}
+
+function clinicDateString(date) {
+  return new Date(date.getTime() + 5.5 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+function appointmentTimestamp(appointment) {
+  const [year, month, day] = appointment.appointmentDate.split("-").map(Number);
+  const [hour, minute] = appointment.appointmentTime.split(":").map(Number);
+  return new Date(Date.UTC(year, month - 1, day, hour, minute) - 5.5 * 60 * 60 * 1000);
+}
+
+let reminderCheckRunning = false;
+async function checkAppointmentReminders() {
+  if (reminderCheckRunning) return;
+  reminderCheckRunning = true;
+  try {
+    const database = await getDatabase();
+    const now = new Date();
+    const today = clinicDateString(now);
+    const tomorrow = clinicDateString(new Date(now.getTime() + 24 * 60 * 60 * 1000));
+    const upcoming = await database.collection("appointments").find({
+      status: "confirmed",
+      appointmentDate: { $gte: today, $lte: tomorrow }
+    }).toArray();
+
+    for (const appointment of upcoming) {
+      const timeUntilAppointment = appointmentTimestamp(appointment).getTime() - now.getTime();
+      if (timeUntilAppointment <= 0) continue;
+      for (const [event, leadTime] of [["reminder24h", 24], ["reminder2h", 2]]) {
+        if (timeUntilAppointment > leadTime * 60 * 60 * 1000) continue;
+        const preferences = appointment.notificationPreferences || { email: true, sms: false, whatsapp: false };
+        const delivery = appointment.notificationDelivery?.[event] || {};
+        const enabled = [["email", preferences.email !== false]].filter(([, isEnabled]) => isEnabled);
+        const needsDelivery = enabled.some(([channel]) => {
+          const previous = delivery[channel];
+          return previous?.status !== "sent" && (previous?.attemptCount || 0) < 5 &&
+            (!previous?.attemptedAt || now.getTime() - new Date(previous.attemptedAt).getTime() >= 5 * 60 * 1000);
+        });
+        if (needsDelivery) await notifyAppointment(database, appointment._id, appointment, event);
+      }
+    }
+    await retryFailedNotifications(database, now);
+  } catch (error) {
+    console.error("Appointment reminder check failed:", error);
+  } finally {
+    reminderCheckRunning = false;
+  }
 }
 
 function getSession(request) {
@@ -213,13 +328,19 @@ async function handleApi(request, response, url) {
     const duplicate = await appointments.findOne({ appointmentDate: appointment.appointmentDate, appointmentTime: appointment.appointmentTime, status: { $nin: ["cancelled"] } });
     if (duplicate) { sendJson(response, 409, { success: false, errors: ["That time slot is already requested. Please choose another time."] }); return; }
     const session = getSession(request);
-    const saved = { ...appointment, status: "pending", createdAt: new Date(), emailSent: false, smsSent: false };
+    const saved = {
+      ...appointment,
+      status: "pending",
+      createdAt: new Date(),
+      emailSent: false,
+      notificationDelivery: {}
+    };
     if (session?.role === "patient") {
       saved.userId = new ObjectId(session.userId);
       saved.name = session.name;
     }
     const result = await appointments.insertOne(saved);
-    await notifyAppointmentCreated(saved);
+    await notifyAppointment(database, result.insertedId, saved, "request");
     sendJson(response, 201, { success: true, message: "Your appointment request has been received.", appointmentId: result.insertedId, price: appointment.price });
     return;
   }
@@ -276,13 +397,27 @@ async function handleApi(request, response, url) {
     if (!requireRole(request, response, "admin")) return;
     const payload = JSON.parse(await readRequestBody(request) || "{}");
     const update = {};
-    if (typeof payload.status === "string") update.status = clean(payload.status, 20);
+    const validStatuses = ["pending", "confirmed", "completed", "cancelled"];
+    if (typeof payload.status === "string") {
+      update.status = clean(payload.status, 20);
+      if (!validStatuses.includes(update.status)) {
+        sendJson(response, 400, { success: false, errors: ["Status must be pending, confirmed, completed, or cancelled."] });
+        return;
+      }
+    }
     if (typeof payload.doctor === "string") update.doctor = clean(payload.doctor, 100);
     if (typeof payload.adminNotes === "string") update.adminNotes = clean(payload.adminNotes, 2000);
     if (typeof payload.price === "number") update.price = payload.price;
     if (Object.keys(update).length === 0) { sendJson(response, 400, { success: false, errors: ["No valid appointment update provided."] }); return; }
     if (!ObjectId.isValid(appointmentMatch[1])) { sendJson(response, 400, { success: false, errors: ["Invalid appointment ID."] }); return; }
-    const result = await appointments.updateOne({ _id: new ObjectId(appointmentMatch[1]) }, { $set: { ...update, updatedAt: new Date() } });
+    const appointmentId = new ObjectId(appointmentMatch[1]);
+    const existing = update.status
+      ? await appointments.findOne({ _id: appointmentId })
+      : null;
+    const result = await appointments.updateOne({ _id: appointmentId }, { $set: { ...update, updatedAt: new Date() } });
+    if (result.matchedCount && update.status && existing?.status !== update.status) {
+      await notifyAppointment(database, appointmentId, { ...existing, ...update }, "status");
+    }
     sendJson(response, result.matchedCount ? 200 : 404, { success: Boolean(result.matchedCount), message: result.matchedCount ? "Appointment updated." : "Appointment not found." });
     return;
   }
@@ -387,6 +522,8 @@ async function startServer() {
 
     server.listen(PORT, () => {
       console.log(`Sakthi Dental Clinic is running at http://localhost:${PORT}`);
+      setTimeout(checkAppointmentReminders, 5000);
+      setInterval(checkAppointmentReminders, 60 * 1000);
     });
   } catch (error) {
     console.error("❌ Failed to start server:", error);
