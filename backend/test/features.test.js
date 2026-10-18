@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { getTreatmentPricing, buildAppointmentEmail, buildReminderSms } = require('../features');
+const { getTreatmentPricing, buildAppointmentEmail, buildReminderSms, normalizeAppointmentTime, isClinicTimeAvailable } = require('../features');
 
 test('treatment pricing returns a positive value for known treatment', () => {
   assert.ok(getTreatmentPricing('Teeth Cleaning / Scaling') > 0);
@@ -24,4 +24,14 @@ test('sms reminder includes clinic name and appointment time', () => {
   assert.match(sms, /10:30/i);
   assert.match(sms, /Dental Pro/i);
   assert.match(sms, /30 minutes/i);
+});
+
+test('appointment times normalize to 24-hour clinic slots', () => {
+  assert.equal(normalizeAppointmentTime('9:00 AM'), '09:00');
+  assert.equal(normalizeAppointmentTime('7:00 PM'), '19:00');
+  assert.equal(normalizeAppointmentTime('15:30'), '15:30');
+  assert.equal(isClinicTimeAvailable('09:00'), true);
+  assert.equal(isClinicTimeAvailable('19:00'), true);
+  assert.equal(isClinicTimeAvailable('08:30 AM'), false);
+  assert.equal(isClinicTimeAvailable('07:30 PM'), false);
 });

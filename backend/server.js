@@ -8,6 +8,8 @@ const { ObjectId } = require("mongodb");
 const { getDatabase, closeDatabase } = require("./db");
 const {
   getTreatmentPricing,
+  normalizeAppointmentTime,
+  isClinicTimeAvailable,
   buildAppointmentEmail,
   buildReminderSms,
   buildAppointmentStatusMessage
@@ -46,9 +48,11 @@ function clean(value, maxLength) {
 }
 
 function validateAppointment(input) {
+  const rawTime = clean(input.appointmentTime, 20);
+  const normalizedTime = normalizeAppointmentTime(rawTime);
   const appointment = {
     name: clean(input.name, 100), email: clean(input.email, 160).toLowerCase(), phone: clean(input.phone, 30),
-    appointmentDate: clean(input.appointmentDate, 10), appointmentTime: clean(input.appointmentTime, 5),
+    appointmentDate: clean(input.appointmentDate, 10), appointmentTime: normalizedTime || rawTime,
     treatment: clean(input.treatment, 100), doctor: clean(input.doctor, 100), message: clean(input.message, 1000),
     notificationPreferences: { email: true, sms: false, whatsapp: false },
     price: Number(input.price) || getTreatmentPricing(input.treatment)
@@ -58,7 +62,11 @@ function validateAppointment(input) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(appointment.email)) errors.push("A valid email is required.");
   if (!appointment.phone) errors.push("Phone number is required.");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(appointment.appointmentDate)) errors.push("A valid appointment date is required.");
-  if (!/^\d{2}:\d{2}$/.test(appointment.appointmentTime)) errors.push("A valid appointment time is required.");
+  if (!normalizedTime || !isClinicTimeAvailable(normalizedTime)) {
+    errors.push("Appointments are available from 9:00 AM to 7:00 PM only.");
+  } else {
+    appointment.appointmentTime = normalizedTime;
+  }
   if (!appointment.treatment) errors.push("Please select a treatment.");
   if (!appointment.price || appointment.price < 0) appointment.price = getTreatmentPricing(appointment.treatment);
   return { appointment, errors };

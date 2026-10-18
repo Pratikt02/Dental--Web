@@ -9,117 +9,119 @@
 </head>
 <body>
 
-<section class="contact-page">
+<header class="header">
+  <a href="index.html" class="logo">
+    <img src="clinic/logo.png" alt="">
+    <span>Sakthi Dental Clinic</span>
+  </a>
+  <nav class="nav" aria-label="Main navigation">
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="treatments.html">Treatments</a>
+    <a href="faq.html">FAQs</a>
+    <a href="contact.html" class="nav-btn" aria-current="page">Book Appointment</a>
+    <a href="login.html" class="patient-nav-link">Sign In</a>
+  </nav>
+</header>
 
-  <div class="contact-hero">
-    <div>
-      <p class="contact-kicker">Sakthi Dental Clinic · Hosur</p>
-      <h1>Care that fits your schedule.</h1>
-      <p class="contact-lede">Tell us what you need and our team will help arrange a comfortable time for your visit.</p>
-    </div>
-    <div class="booking-trust" aria-label="Booking details">
-      <span class="trust-mark">✓</span>
-      <div>
-        <strong>Friendly care, thoughtfully scheduled</strong>
-        <span>Appointment requests are reviewed by our clinic team.</span>
-      </div>
-    </div>
-  </div>
+<main class="contact-page">
+  <section class="booking-layout" aria-labelledby="booking-title">
+    <div class="booking-intro">
+      <p class="contact-kicker"><span class="live-dot"></span> Sakthi Dental Clinic · Hosur</p>
+      <h1 id="booking-title">A brighter smile starts with a visit.</h1>
+      <p class="contact-lede">Tell us a little about yourself and choose a time that works for you. Our team will be in touch to confirm your appointment.</p>
 
-  <div class="contact-container">
-
-    <!-- LEFT: FORM -->
-    <div class="form-wrapper">
-  
-  <h2 class="form-title">Book Your Appointment</h2>
-  <p class="form-intro">Share a few details and we will contact you to confirm your visit.</p>
-
-  <form id="appointmentForm" class="contact-form">
-    <div class="form-grid">
-      <div class="form-field">
-        <label for="name">Full name</label>
-        <input id="name" name="name" type="text" autocomplete="name" placeholder="Your name" required>
-      </div>
-
-      <div class="form-field">
-        <label for="phone">Phone number</label>
-        <input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="+91" required>
-      </div>
-    </div>
-
-    <div class="form-field">
-      <label for="email">Email address</label>
-      <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
-    </div>
-
-    <div class="form-grid">
-      <div class="form-field">
-        <label for="appointmentDate">Preferred date</label>
-        <input id="appointmentDate" name="appointmentDate" type="date" required>
+      <div class="booking-photo-group">
+        <img class="booking-photo booking-photo-main" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1000&q=85" alt="Patient smiling warmly" fetchpriority="high">
+        <img class="booking-photo booking-photo-small" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=420&q=85" alt="Patient smiling" loading="lazy">
+        <div class="photo-caption">
+          <span class="photo-caption-mark" aria-hidden="true">✦</span>
+          <span><strong>Care that feels good</strong><small>Comfort-first dental visits for every smile</small></span>
+        </div>
       </div>
 
-      <div class="form-field">
-        <label for="appointmentTime">Preferred time</label>
-        <input id="appointmentTime" name="appointmentTime" type="time" min="09:00" max="19:00" required>
+      <div class="booking-highlights" aria-label="Appointment information">
+        <div><span class="highlight-icon" aria-hidden="true">✓</span><span><strong>Easy to request</strong><small>Just a few details to get started</small></span></div>
+        <div><span class="highlight-icon" aria-hidden="true">◷</span><span><strong>Open every day</strong><small>9:00 AM – 7:00 PM</small></span></div>
       </div>
     </div>
 
-    <div class="form-field">
-      <label for="treatment">Treatment</label>
-      <select id="treatment" name="treatment" required>
-        <option value="">Select a treatment</option>
-        <option>General consultation</option>
-        <option>Teeth Cleaning / Scaling</option>
-        <option>Tooth Filling</option>
-        <option>Tooth Extraction</option>
-        <option>Orthodontic Treatment</option>
-        <option>Root Canal Treatment</option>
-        <option>Other</option>
-      </select>
+    <section class="form-wrapper" aria-labelledby="form-title">
+      <div class="form-intro-row">
+        <div class="form-heading-icon" aria-hidden="true">+</div>
+        <div>
+          <p class="form-step">YOUR VISIT, MADE SIMPLE</p>
+          <h2 class="form-title" id="form-title">Request an appointment</h2>
+          <p class="form-intro">Complete the form and our clinic team will confirm your visit.</p>
+        </div>
+      </div>
+
+      <form id="appointmentForm" class="contact-form">
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="name">Full name</label>
+            <input id="name" name="name" type="text" autocomplete="name" placeholder="e.g. Priya Sharma" required>
+          </div>
+          <div class="form-field">
+            <label for="phone">Phone number</label>
+            <input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="+91 98765 43210" required>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="email">Email address</label>
+          <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="appointmentDate">Preferred date</label>
+            <input id="appointmentDate" name="appointmentDate" type="date" required>
+          </div>
+          <div class="form-field">
+            <label for="appointmentTime">Preferred time</label>
+            <select id="appointmentTime" name="appointmentTime" required>
+              <option value="">Choose a time</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="treatment">How can we help?</label>
+          <select id="treatment" name="treatment" required>
+            <option value="">Select a treatment</option>
+            <option>General consultation</option>
+            <option>Teeth Cleaning / Scaling</option>
+            <option>Tooth Filling</option>
+            <option>Tooth Extraction</option>
+            <option>Orthodontic Treatment</option>
+            <option>Root Canal Treatment</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="message">Anything else we should know? <span>(optional)</span></label>
+          <textarea id="message" name="message" maxlength="1000" placeholder="Share any details that may help us prepare for your visit."></textarea>
+        </div>
+
+        <p class="form-privacy">Your details are only used to help arrange your appointment.</p>
+        <button type="submit"><span>Request my appointment</span><span class="submit-arrow" aria-hidden="true">→</span></button>
+        <p id="appointmentStatus" class="form-status" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+  </section>
+
+  <section class="booking-contact-strip" aria-label="Clinic contact information">
+    <div class="contact-strip-intro">
+      <span class="contact-strip-icon" aria-hidden="true">♥</span>
+      <span><strong>Questions before you book?</strong><small>We are happy to help.</small></span>
     </div>
-
-    <div class="form-field">
-      <label for="message">Additional information <span>(optional)</span></label>
-      <textarea id="message" name="message" maxlength="1000" placeholder="Tell us anything that will help us prepare for your visit."></textarea>
-    </div>
-
-    <button type="submit"><span>Request Appointment</span><span class="submit-arrow" aria-hidden="true">→</span></button>
-    <p id="appointmentStatus" class="form-status" role="status" aria-live="polite"></p>
-  </form>
-
-</div>
-
-    <!-- RIGHT: CONTACT INFO -->
-    <aside class="contact-info">
-      <p class="info-kicker">Visit or call us</p>
-      <h2>We are here for your smile.</h2>
-
-      <div class="contact-detail">
-        <span class="contact-icon" aria-hidden="true">⌖</span>
-        <div><strong>Clinic address</strong><p>B2/8,Savedi,Ahilyanagar<br>Maharastra 414304</p></div>
-      </div>
-
-      <div class="contact-detail">
-        <span class="contact-icon" aria-hidden="true">✉</span>
-        <div><strong>Email us</strong><p><a href="mailto:info@sakthidentalclinic.in">info@sakthidentalclinic.in</a></p></div>
-      </div>
-
-      <div class="contact-detail">
-        <span class="contact-icon" aria-hidden="true">☎</span>
-        <div><strong>Call the clinic</strong><p><a href="tel:+919421588976">+91 9421588976</a></p></div>
-      </div>
-
-      <div class="hours-card">
-        <span>Clinic hours</span>
-        <strong>Every day · 9 AM – 7 PM</strong>
-      </div>
-
-      <a class="info-call" href="tel:+919421588976">Call for immediate help <span aria-hidden="true">→</span></a>
-    </aside>
-    </div>
-
-  </div>
-</section>
+    <a class="contact-strip-item" href="tel:+919421588976"><span aria-hidden="true">☎</span><span><small>Call our clinic</small><strong>+91 94215 88976</strong></span></a>
+    <a class="contact-strip-item" href="mailto:info@sakthidentalclinic.in"><span aria-hidden="true">✉</span><span><small>Email us</small><strong>info@sakthidentalclinic.in</strong></span></a>
+    <div class="contact-strip-item"><span aria-hidden="true">⌖</span><span><small>Find us</small><strong>Ahilyanagar, Maharashtra</strong></span></div>
+  </section>
+</main>
 
 <script src="js/main.js"></script>
 
