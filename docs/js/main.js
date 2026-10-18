@@ -14,33 +14,46 @@ document.querySelectorAll(".treatment-card").forEach(card => {
   observer.observe(card);
 });
 
-// ====================
-// Testimonials Slider
-// ====================
-document.addEventListener("DOMContentLoaded", function () {
-  const testimonials = document.querySelectorAll(".testimonial-card");
-  let index = 0;
-
-  if (testimonials.length === 0) return;
-
-  setInterval(() => {
-    testimonials[index].classList.remove("active");
-    index = (index + 1) % testimonials.length;
-    testimonials[index].classList.add("active");
-  }, 4000);
-});
-
 // Appointment booking
 const appointmentDateInput = document.getElementById("appointmentDate");
 const appointmentTimeInput = document.getElementById("appointmentTime");
 let bookedTimes = [];
+
+function buildAppointmentTimeOptions() {
+  const slots = [];
+  const startMinutes = 9 * 60;
+  const endMinutes = 19 * 60;
+
+  for (let totalMinutes = startMinutes; totalMinutes <= endMinutes; totalMinutes += 30) {
+    const hour = Math.floor(totalMinutes / 60);
+    const minute = totalMinutes % 60;
+    const isPm = hour >= 12;
+    const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+    const value = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+    const label = `${displayHour}:${String(minute).padStart(2, "0")} ${isPm ? "PM" : "AM"}`;
+    slots.push({ value, label });
+  }
+
+  return slots;
+}
+
+if (appointmentTimeInput) {
+  const options = buildAppointmentTimeOptions();
+  appointmentTimeInput.innerHTML = '<option value="">Select a time</option>' + options
+    .map(slot => `<option value="${slot.value}">${slot.label}</option>`)
+    .join("");
+}
 
 if (appointmentDateInput) {
   const today = new Date();
   const localDate = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
     .toISOString()
     .split("T")[0];
+  const maxDate = new Date(today.getTime() + 90 * 24 * 60 * 60 * 1000);
   appointmentDateInput.min = localDate;
+  appointmentDateInput.max = new Date(maxDate.getTime() - maxDate.getTimezoneOffset() * 60000)
+    .toISOString()
+    .split("T")[0];
   appointmentDateInput.addEventListener("change", async () => {
     try {
       const response = await fetch(`/api/availability?date=${appointmentDateInput.value}`);
@@ -60,7 +73,20 @@ document.getElementById("appointmentForm")?.addEventListener("submit", async fun
   const status = document.getElementById("appointmentStatus");
   const submitButton = form.querySelector("button[type='submit']");
 
-  if (appointmentTimeInput && bookedTimes.includes(appointmentTimeInput.value)) {
+  const selectedTime = appointmentTimeInput?.value || "";
+  if (selectedTime) {
+    const [hourText, minuteText] = selectedTime.split(":");
+    const hour = Number(hourText);
+    const minute = Number(minuteText);
+    const totalMinutes = (hour * 60) + minute;
+    if (totalMinutes < 9 * 60 || totalMinutes > 19 * 60 || (minute !== 0 && minute !== 30)) {
+      appointmentTimeInput.setCustomValidity("Please choose a time between 9:00 AM and 7:00 PM in 30-minute slots.");
+      appointmentTimeInput.reportValidity();
+      return;
+    }
+  }
+
+  if (appointmentTimeInput && bookedTimes.includes(selectedTime)) {
     appointmentTimeInput.setCustomValidity("This time is already requested. Please choose another time.");
     appointmentTimeInput.reportValidity();
     return;
@@ -96,55 +122,4 @@ document.getElementById("appointmentForm")?.addEventListener("submit", async fun
   } finally {
     submitButton.disabled = false;
   }
-});
-
-// ====================
-// Professional Dental Tips (Auto Changing)
-// ====================
-
-document.addEventListener("DOMContentLoaded", function () {
-
-  const tips = [
-    {
-      title: "Brush Twice Daily",
-      text: "Brush your teeth morning and night using fluoride toothpaste."
-    },
-    {
-      title: "Floss Regularly",
-      text: "Floss removes food particles and plaque between teeth."
-    },
-    {
-      title: "Visit Dentist Every 6 Months",
-      text: "Regular checkups help detect problems early."
-    },
-    {
-      title: "Avoid Excess Sugar",
-      text: "Too much sugar increases risk of cavities."
-    },
-    {
-      title: "Drink Plenty of Water",
-      text: "Water helps wash away bacteria and keeps mouth fresh."
-    }
-  ];
-
-  const container = document.getElementById("tips-container");
-
-  if (!container) return;
-
-  let index = 0;
-
-  function showTip() {
-    container.innerHTML = `
-      <div class="tip-card">
-        <h3>${tips[index].title}</h3>
-        <p>${tips[index].text}</p>
-      </div>
-    `;
-
-    index = (index + 1) % tips.length;
-  }
-
-  showTip();
-  setInterval(showTip, 4000); // Change every 4 seconds
-
 });

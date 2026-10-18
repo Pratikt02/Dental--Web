@@ -1364,10 +1364,44 @@ textarea:focus-visible {
   font-size: 17px;
 }
 
+.hero-media-panel {
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+}
+
+.hero-image-stack {
+  position: relative;
+  width: min(100%, 380px);
+  height: 360px;
+}
+
+.patient-photo {
+  position: absolute;
+  border-radius: 28px;
+  object-fit: cover;
+  box-shadow: 0 24px 52px rgba(18, 51, 78, 0.18);
+}
+
+.photo-main {
+  inset: 0 20px 0 0;
+  width: calc(100% - 80px);
+  height: 100%;
+}
+
+.photo-pill {
+  right: 0;
+  bottom: 20px;
+  width: 150px;
+  height: 150px;
+  border: 4px solid rgba(255, 255, 255, 0.8);
+}
+
 .booking-trust {
   display: flex;
   align-items: flex-start;
   gap: 14px;
+  width: min(100%, 340px);
   padding: 18px 20px;
   border: 1px solid rgba(79, 140, 255, 0.16);
   border-radius: 18px;
@@ -1421,6 +1455,14 @@ textarea:focus-visible {
   animation: bookingReveal 0.7s 0.12s ease both;
 }
 
+.form-intro-row {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
 .form-title {
   margin-bottom: 7px;
   color: #173652;
@@ -1429,9 +1471,30 @@ textarea:focus-visible {
 }
 
 .form-intro {
-  margin-bottom: 26px;
+  margin: 0;
   color: #718496;
   font-size: 14px;
+}
+
+.form-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.form-badges span {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  border: 1px solid rgba(79, 140, 255, 0.18);
+  border-radius: 999px;
+  background: #edf5ff;
+  color: #1f5ea8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .contact-form {
@@ -1633,13 +1696,19 @@ textarea:focus-visible {
   .contact-page { padding: 54px 6% 76px; }
   .contact-hero { grid-template-columns: 1fr; gap: 24px; }
   .contact-container { grid-template-columns: 1fr; }
+  .hero-media-panel { justify-items: stretch; }
+  .hero-image-stack { width: min(100%, 440px); margin: 0 auto; }
   .contact-info { min-height: 560px; }
+  .form-intro-row { flex-direction: column; align-items: flex-start; }
+  .form-badges { justify-content: flex-start; }
 }
 
 @media (max-width: 520px) {
   .contact-hero h1 { font-size: 40px; }
   .form-grid { grid-template-columns: 1fr; }
   .contact-info { min-height: auto; }
+  .hero-image-stack { height: 280px; }
+  .photo-pill { width: 120px; height: 120px; }
 }
 
 /* ==================== */
@@ -2165,4 +2234,1000 @@ body.dark-mode .theme-toggle { background: #ef8354; color: #10252b; }
 @media (max-width: 520px) {
   body:has(.call-float) .theme-toggle { right: 14px; bottom: 76px; }
   body:has(.call-float) .call-float { right: 14px; bottom: 18px; }
+}
+
+/* Appointment booking page */
+.contact-page {
+  min-height: calc(100vh - 72px);
+  padding: clamp(36px, 5vw, 68px) clamp(20px, 6vw, 92px) 54px;
+  background:
+    radial-gradient(ellipse at 8% 28%, rgba(8, 127, 140, 0.09), transparent 32%),
+    linear-gradient(145deg, #f4faf9 0%, #f8fbfa 54%, #edf7f5 100%);
+}
+
+.booking-layout,
+.booking-contact-strip {
+  width: min(1200px, 100%);
+  margin-inline: auto;
+}
+
+.booking-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: clamp(32px, 6vw, 76px);
+}
+
+.booking-intro {
+  min-width: 0;
+  padding-block: 12px;
+}
+
+.booking-intro .contact-kicker {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 19px;
+}
+
+.booking-intro h1 {
+  max-width: 510px;
+  margin: 0;
+  color: #143642;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: clamp(42px, 5vw, 66px);
+  letter-spacing: -0.055em;
+  line-height: 1.02;
+  text-align: left;
+}
+
+.booking-intro .contact-lede {
+  max-width: 490px;
+  margin: 18px 0 0;
+  color: #607b82;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.booking-photo-group {
+  position: relative;
+  width: min(100%, 480px);
+  height: clamp(220px, 25vw, 310px);
+  margin-top: 26px;
+}
+
+.booking-photo {
+  position: absolute;
+  display: block;
+  border: 6px solid rgba(255, 255, 255, 0.9);
+  object-fit: cover;
+  box-shadow: 0 22px 50px rgba(20, 54, 66, 0.17);
+}
+
+.booking-photo-main {
+  inset: 0 74px 0 0;
+  width: calc(100% - 74px);
+  height: 100%;
+  border-radius: 28px 72px 28px 28px;
+  object-position: center 38%;
+}
+
+.booking-photo-small {
+  right: 0;
+  bottom: 20px;
+  width: clamp(108px, 12vw, 152px);
+  height: clamp(108px, 12vw, 152px);
+  border-radius: 50%;
+  object-position: center 35%;
+}
+
+.photo-caption {
+  position: absolute;
+  z-index: 1;
+  right: 22px;
+  bottom: 32px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 230px;
+  padding: 11px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 10px 26px rgba(20, 54, 66, 0.12);
+}
+
+.photo-caption-mark {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 11px;
+  background: #e3f4f0;
+  color: #087f8c;
+}
+
+.photo-caption strong,
+.photo-caption small,
+.booking-highlights strong,
+.booking-highlights small {
+  display: block;
+}
+
+.photo-caption strong {
+  color: #143642;
+  font-size: 12px;
+}
+
+.photo-caption small {
+  margin-top: 2px;
+  color: #607b82;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.booking-highlights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  margin-top: 22px;
+}
+
+.booking-highlights > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.highlight-icon {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid #cce5e1;
+  border-radius: 50%;
+  background: #fff;
+  color: #087f8c;
+  font-weight: 700;
+}
+
+.booking-highlights strong {
+  color: #24464d;
+  font-size: 12px;
+}
+
+.booking-highlights small {
+  margin-top: 2px;
+  color: #71878c;
+  font-size: 11px;
+}
+
+.form-wrapper {
+  min-width: 0;
+  padding: clamp(24px, 3.5vw, 40px);
+  border: 1px solid #dcebe8;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 26px 72px rgba(20, 54, 66, 0.12);
+}
+
+.form-intro-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.form-heading-icon {
+  display: grid;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 14px;
+  background: #e7f5f2;
+  color: #087f8c;
+  font-size: 24px;
+  font-weight: 400;
+}
+
+.form-step {
+  margin: 0 0 5px;
+  color: #087f8c;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+}
+
+.form-title {
+  margin: 0;
+  color: #143642;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: clamp(23px, 2.5vw, 30px);
+  line-height: 1.2;
+  text-align: left;
+}
+
+.form-intro {
+  margin: 7px 0 0;
+  color: #71878c;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.form-wrapper .contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.form-wrapper .form-grid {
+  gap: 14px;
+}
+
+.form-wrapper .form-field {
+  min-width: 0;
+  gap: 6px;
+}
+
+.form-wrapper .contact-form label {
+  color: #36545a;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.form-wrapper .contact-form input,
+.form-wrapper .contact-form select,
+.form-wrapper .contact-form textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 47px;
+  padding: 11px 13px;
+  border: 1px solid #d8e6e4;
+  border-radius: 11px;
+  background-color: #fbfdfd;
+  color: #203b40;
+  font-size: 13px;
+}
+
+.form-wrapper .contact-form textarea {
+  min-height: 82px;
+  resize: vertical;
+}
+
+.form-wrapper .contact-form input::placeholder,
+.form-wrapper .contact-form textarea::placeholder {
+  color: #9aabad;
+}
+
+.form-privacy {
+  margin: -2px 0 0;
+  color: #758b8f;
+  font-size: 11px;
+}
+
+.form-wrapper .contact-form button {
+  min-height: 52px;
+  margin-top: 1px;
+  border-radius: 12px;
+  background: #087f8c;
+  color: #fff;
+  font-size: 14px;
+  box-shadow: 0 12px 24px rgba(8, 127, 140, 0.2);
+}
+
+.form-wrapper .contact-form button:hover {
+  background: #066c77;
+}
+
+.form-wrapper .form-status {
+  margin: 0;
+}
+
+.booking-contact-strip {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1.35fr 1fr;
+  align-items: center;
+  gap: 16px;
+  margin-top: 32px;
+  padding: 18px 22px;
+  border: 1px solid #dcebe8;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.contact-strip-intro,
+.contact-strip-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.contact-strip-icon,
+.contact-strip-item > span:first-child {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 11px;
+  background: #e7f5f2;
+  color: #087f8c;
+  font-size: 15px;
+  text-decoration: none;
+}
+
+.contact-strip-intro strong,
+.contact-strip-intro small,
+.contact-strip-item small,
+.contact-strip-item strong {
+  display: block;
+}
+
+.contact-strip-intro strong,
+.contact-strip-item strong {
+  overflow-wrap: anywhere;
+  color: #24464d;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.contact-strip-intro small,
+.contact-strip-item small {
+  margin-bottom: 2px;
+  color: #71878c;
+  font-size: 10px;
+}
+
+.contact-strip-item {
+  color: inherit;
+  text-decoration: none;
+}
+
+.contact-strip-item:hover strong {
+  color: #087f8c;
+}
+
+body.dark-mode .contact-page {
+  background:
+    radial-gradient(ellipse at 8% 28%, rgba(239, 131, 84, 0.1), transparent 32%),
+    linear-gradient(145deg, #132e34 0%, #10252b 100%);
+}
+
+body.dark-mode .booking-intro h1,
+body.dark-mode .photo-caption strong,
+body.dark-mode .booking-highlights strong,
+body.dark-mode .contact-strip-intro strong,
+body.dark-mode .contact-strip-item strong {
+  color: #e9f5f3;
+}
+
+body.dark-mode .booking-intro .contact-lede,
+body.dark-mode .photo-caption small,
+body.dark-mode .booking-highlights small,
+body.dark-mode .form-intro,
+body.dark-mode .form-privacy,
+body.dark-mode .contact-strip-intro small,
+body.dark-mode .contact-strip-item small {
+  color: #a5c0c2;
+}
+
+body.dark-mode .form-wrapper,
+body.dark-mode .booking-contact-strip {
+  border-color: #2c4b50;
+  background: #17363c;
+}
+
+body.dark-mode .form-title,
+body.dark-mode .form-wrapper .contact-form label {
+  color: #e9f5f3;
+}
+
+body.dark-mode .form-wrapper .contact-form input,
+body.dark-mode .form-wrapper .contact-form select,
+body.dark-mode .form-wrapper .contact-form textarea {
+  border-color: #36575c;
+  background: #10252b;
+  color: #e9f5f3;
+}
+
+body.dark-mode .photo-caption {
+  border-color: #36575c;
+  background: #17363c;
+}
+
+@media (max-width: 900px) {
+  .contact-page { padding-inline: 5%; }
+  .booking-layout { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: 28px; }
+  .booking-contact-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .header { flex-wrap: wrap; row-gap: 9px; }
+  .header .nav { flex: 1 1 100%; justify-content: center; overflow: visible; }
+}
+
+@media (max-width: 700px) {
+  .contact-page { padding: 34px 20px 38px; }
+  .booking-layout { grid-template-columns: 1fr; gap: 28px; }
+  .booking-intro { order: 2; }
+  .form-wrapper { order: 1; }
+  .booking-intro { padding: 0; }
+  .booking-intro h1 { max-width: 580px; font-size: clamp(38px, 11vw, 54px); }
+  .booking-intro .contact-lede { font-size: 15px; }
+  .booking-photo-group { width: min(100%, 500px); height: 260px; margin-top: 22px; }
+  .booking-highlights { gap: 16px; margin-top: 18px; }
+  .form-wrapper { padding: 25px 21px; }
+  .booking-contact-strip { margin-top: 24px; padding: 16px; }
+}
+
+@media (max-width: 460px) {
+  .header { align-items: flex-start; flex-wrap: wrap; }
+  .header .nav { justify-content: flex-start; }
+  .booking-photo-group { height: 220px; }
+  .booking-photo-main { right: 56px; width: calc(100% - 56px); }
+  .photo-caption { right: 8px; bottom: 14px; max-width: 200px; }
+  .booking-contact-strip { grid-template-columns: 1fr; }
+  .form-wrapper .form-grid { grid-template-columns: 1fr; }
+}
+
+/* Dental care tips */
+.dental-tips {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(66px, 8vw, 108px) clamp(20px, 8%, 120px);
+  background:
+    radial-gradient(circle at 92% 5%, rgba(8, 127, 140, 0.1), transparent 25%),
+    linear-gradient(145deg, #f0f8f7 0%, #f8fbfa 58%, #edf6f4 100%);
+  text-align: left;
+}
+
+.tips-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  width: min(1160px, 100%);
+  margin: 0 auto 34px;
+}
+
+.tips-heading .section-kicker {
+  margin-bottom: 11px;
+}
+
+.dental-tips h2 {
+  max-width: 700px;
+  margin: 0;
+  color: #143642;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: clamp(32px, 4.5vw, 52px);
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+}
+
+.tips-intro {
+  max-width: 580px;
+  margin: 13px 0 0;
+  color: #607b82;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.tips-appointment-link {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 13px;
+  min-height: 46px;
+  padding: 0 18px;
+  border: 1px solid #d0e5e2;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  color: #087f8c;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tips-appointment-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(20, 54, 66, 0.1);
+}
+
+.tips-appointment-link span,
+.tips-footer a span {
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+
+.tips-appointment-link:hover span,
+.tips-footer a:hover span {
+  transform: translateX(3px);
+}
+
+.tips-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  width: min(1160px, 100%);
+  margin: 0 auto;
+}
+
+.dental-tips .tip-card {
+  min-width: 0;
+  margin: 0;
+  padding: 10px;
+  overflow: hidden;
+  border: 1px solid #deebe9;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(20, 54, 66, 0.065);
+  text-align: left;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.dental-tips .tip-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 42px rgba(20, 54, 66, 0.12);
+}
+
+.tip-image-wrap {
+  position: relative;
+  height: 148px;
+  overflow: hidden;
+  border-radius: 13px;
+  background: #e5f1ef;
+}
+
+.tip-illustration {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+}
+
+.tip-art-brush { background: linear-gradient(135deg, #e5f5f1, #f3faf8); }
+.tip-art-floss { background: linear-gradient(135deg, #edf0ff, #f7f7ff); }
+.tip-art-checkup { background: linear-gradient(135deg, #e8f5ed, #f6faf4); }
+.tip-art-water { background: linear-gradient(135deg, #e3f4fa, #f2fbfd); }
+.tip-art-smile { background: linear-gradient(135deg, #fff0e7, #fff8f3); }
+
+.tip-card:hover .tip-illustration {
+  transform: translateY(-2px) scale(1.025);
+  transition: transform 0.35s ease;
+}
+
+.tip-number {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: grid;
+  width: 33px;
+  height: 33px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #087f8c;
+  font-size: 10px;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(20, 54, 66, 0.1);
+}
+
+.tip-card-copy {
+  padding: 15px 10px 13px;
+}
+
+.tip-category {
+  color: #087f8c;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.dental-tips .tip-card h3 {
+  margin: 7px 0 6px;
+  color: #173b45;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 17px;
+  line-height: 1.3;
+}
+
+.dental-tips .tip-card p {
+  margin: 0;
+  color: #668087;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.tips-footer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: min(1160px, 100%);
+  margin: 24px auto 0;
+  padding: 17px 20px;
+  border: 1px solid #d5e9e5;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.tips-footer-icon {
+  display: grid;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 12px;
+  background: #e2f3ef;
+  color: #087f8c;
+}
+
+.tips-footer p {
+  flex: 1;
+  margin: 0;
+  color: #607b82;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.tips-footer p strong {
+  color: #24464d;
+}
+
+.tips-footer a {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 9px;
+  color: #087f8c;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+body.dark-mode .dental-tips {
+  background:
+    radial-gradient(circle at 92% 5%, rgba(239, 131, 84, 0.1), transparent 25%),
+    linear-gradient(145deg, #132e34 0%, #10252b 100%);
+}
+
+body.dark-mode .dental-tips h2,
+body.dark-mode .dental-tips .tip-card h3,
+body.dark-mode .tips-footer p strong {
+  color: #e9f5f3;
+}
+
+body.dark-mode .tips-intro,
+body.dark-mode .dental-tips .tip-card p,
+body.dark-mode .tips-footer p {
+  color: #a5c0c2;
+}
+
+body.dark-mode .tips-appointment-link,
+body.dark-mode .dental-tips .tip-card,
+body.dark-mode .tips-footer {
+  border-color: #2c4b50;
+  background: #17363c;
+}
+
+body.dark-mode .tip-number {
+  border-color: #36575c;
+  background: #10252b;
+}
+
+@media (max-width: 900px) {
+  .tips-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tips-heading { align-items: flex-start; }
+}
+
+@media (max-width: 560px) {
+  .dental-tips { padding: 64px 20px; }
+  .tips-heading { flex-direction: column; gap: 18px; margin-bottom: 24px; }
+  .tips-grid { grid-template-columns: 1fr; gap: 14px; }
+  .dental-tips .tip-card { display: grid; grid-template-columns: 112px minmax(0, 1fr); align-items: center; gap: 12px; padding: 9px; }
+  .tip-image-wrap { height: 112px; }
+  .tip-card-copy { padding: 7px 5px; }
+  .dental-tips .tip-card h3 { font-size: 15px; }
+  .dental-tips .tip-card p { font-size: 11px; }
+  .tips-footer { align-items: flex-start; flex-wrap: wrap; }
+  .tips-footer p { min-width: calc(100% - 56px); }
+  .tips-footer a { margin-left: 52px; }
+}
+
+/* Patient testimonials */
+.testimonials {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(68px, 8vw, 106px) clamp(20px, 8%, 120px);
+  background:
+    radial-gradient(circle at 90% 10%, rgba(239, 131, 84, 0.09), transparent 25%),
+    linear-gradient(135deg, #f1f8f7 0%, #eaf6f4 100%);
+  text-align: left;
+}
+
+.testimonials::before,
+.testimonials::after {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border: 1px solid rgba(8, 127, 140, 0.08);
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+}
+
+.testimonials::before { top: -190px; right: 8%; }
+.testimonials::after { right: -205px; bottom: -210px; width: 440px; height: 440px; }
+
+.testimonial-heading,
+.testimonial-slider,
+.testimonial-footer {
+  position: relative;
+  z-index: 1;
+  width: min(1160px, 100%);
+  margin-inline: auto;
+}
+
+.testimonial-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 22px;
+  margin-bottom: 34px;
+}
+
+.testimonials .section-kicker {
+  margin-bottom: 10px;
+  color: #087f8c;
+}
+
+.testimonials .section-title {
+  margin: 0;
+  color: #143642;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: clamp(32px, 4.5vw, 50px);
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+  text-align: left;
+}
+
+.testimonial-intro {
+  max-width: 570px;
+  margin: 12px 0 0;
+  color: #607b82;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.testimonial-book-link {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid #cfe3e0;
+  border-radius: 999px;
+  color: #087f8c;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.testimonial-book-link:hover {
+  transform: translateY(-2px);
+  background: #fff;
+}
+
+.testimonial-book-link span,
+.testimonial-footer a span {
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+
+.testimonial-book-link:hover span,
+.testimonial-footer a:hover span {
+  transform: translateX(3px);
+}
+
+.testimonial-slider {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.testimonials .testimonial-card,
+.testimonials .testimonial-card.active {
+  display: flex;
+  min-width: 0;
+  min-height: 292px;
+  flex-direction: column;
+  padding: 22px;
+  border: 1px solid #d7e9e7;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 18px 38px rgba(20, 54, 66, 0.08);
+  text-align: left;
+  animation: none;
+}
+
+.testimonial-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 11px;
+}
+
+.testimonial-quote-mark {
+  height: 41px;
+  color: #ef8354;
+  font-family: Georgia, serif;
+  font-size: 62px;
+  line-height: 1;
+}
+
+.testimonial-tag {
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: #e9f5f2;
+  color: #087f8c;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-align: center;
+}
+
+.testimonials .testimonial-text {
+  flex: 1;
+  margin: 0 0 20px;
+  color: #48646a;
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.testimonial-person {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding-top: 14px;
+  border-top: 1px solid #e6efed;
+}
+
+.testimonial-avatar {
+  display: grid;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  box-shadow: 0 0 0 1px rgba(20, 54, 66, 0.08);
+}
+
+.avatar-teal { background: linear-gradient(145deg, #087f8c, #49b4a6); }
+.avatar-coral { background: linear-gradient(145deg, #df7654, #f0a06d); }
+.avatar-lilac { background: linear-gradient(145deg, #707bb7, #a199d0); }
+
+.testimonials .testimonial-name {
+  margin: 0;
+  color: #173b45;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.testimonial-patient-label {
+  display: block;
+  margin-top: 3px;
+  color: #819397;
+  font-size: 10px;
+}
+
+.testimonial-heart {
+  margin-left: auto;
+  color: #ef8354;
+  font-size: 16px;
+}
+
+.testimonial-footer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 22px;
+  padding: 15px 19px;
+  border: 1px solid #d3e7e4;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.testimonial-footer-mark {
+  display: grid;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 11px;
+  background: #e2f3ef;
+  color: #087f8c;
+}
+
+.testimonial-footer p {
+  flex: 1;
+  margin: 0;
+  color: #607b82;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.testimonial-footer p strong { color: #143642; }
+
+.testimonial-footer a {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 9px;
+  color: #087f8c;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+body.dark-mode .testimonials {
+  background:
+    radial-gradient(circle at 90% 10%, rgba(239, 131, 84, 0.13), transparent 25%),
+    linear-gradient(135deg, #132e34 0%, #10252b 100%);
+}
+
+body.dark-mode .testimonials::before,
+body.dark-mode .testimonials::after { border-color: rgba(255, 255, 255, 0.08); }
+body.dark-mode .testimonials .section-kicker { color: #ffb18b; }
+body.dark-mode .testimonials .section-title { color: #e9f5f3; }
+body.dark-mode .testimonial-intro { color: #a5c0c2; }
+body.dark-mode .testimonial-book-link { border-color: #36575c; color: #e9f5f3; }
+body.dark-mode .testimonial-book-link:hover { background: #21464c; }
+
+body.dark-mode .testimonials .testimonial-card,
+body.dark-mode .testimonials .testimonial-card.active {
+  border-color: #36575c;
+  background: #17363c;
+}
+
+body.dark-mode .testimonials .testimonial-text,
+body.dark-mode .testimonials .testimonial-name {
+  color: #e9f5f3;
+}
+
+body.dark-mode .testimonial-person { border-color: #36575c; }
+body.dark-mode .testimonial-tag { background: #21464c; color: #a9e2dc; }
+body.dark-mode .testimonial-footer { border-color: #36575c; background: rgba(23, 54, 60, 0.78); }
+body.dark-mode .testimonial-footer-mark { background: #21464c; color: #ffb18b; }
+body.dark-mode .testimonial-footer p { color: #a5c0c2; }
+body.dark-mode .testimonial-footer p strong { color: #e9f5f3; }
+body.dark-mode .testimonial-footer a { color: #ffb18b; }
+
+@media (max-width: 900px) {
+  .testimonial-slider { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .testimonials .testimonial-card:last-child { grid-column: 1 / -1; }
+  .testimonials .testimonial-card { min-height: 260px; }
+}
+
+@media (max-width: 560px) {
+  .testimonials { padding: 68px 20px; }
+  .testimonial-heading { align-items: flex-start; flex-direction: column; }
+  .testimonial-slider { grid-template-columns: 1fr; }
+  .testimonials .testimonial-card:last-child { grid-column: auto; }
+  .testimonials .testimonial-card { min-height: 0; padding: 20px; }
+  .testimonial-footer { align-items: flex-start; flex-wrap: wrap; }
+  .testimonial-footer p { min-width: calc(100% - 55px); }
+  .testimonial-footer a { margin-left: 50px; }
 }
