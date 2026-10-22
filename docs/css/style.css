@@ -3231,3 +3231,118 @@ body.dark-mode .testimonial-footer a { color: #ffb18b; }
   .testimonial-footer p { min-width: calc(100% - 55px); }
   .testimonial-footer a { margin-left: 50px; }
 }
+
+/* Homepage tablet and mobile layout refinements */
+@media (max-width: 900px) {
+  .assurance-banners {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .why-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .facilities-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .facility-item:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .footer-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .header {
+    padding: 12px 18px;
+  }
+
+  .header .logo {
+    min-width: 0;
+  }
+
+  .header .logo span {
+    font-size: clamp(14px, 4.5vw, 18px);
+  }
+
+  .header .nav {
+    justify-content: flex-start;
+    gap: 9px 12px;
+  }
+
+  .header .nav a {
+    font-size: 12px;
+  }
+
+  .header .nav .nav-btn {
+    padding: 8px 12px;
+  }
+
+  .hero {
+    gap: 32px;
+    padding: 56px 20px 64px;
+  }
+
+  .hero h1 {
+    font-size: clamp(36px, 9vw, 44px);
+    line-height: 1.05;
+  }
+
+  .hero-kicker {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+
+  .hero-buttons {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .hero-buttons .btn-primary,
+  .hero-buttons .btn-secondary {
+    width: 100%;
+    padding-inline: 16px;
+    text-align: center;
+  }
+
+  .assurance,
+  .why-us,
+  .core-treatments,
+  .facilities {
+    padding: 68px 20px;
+  }
+
+  .why-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .assurance-banners {
+    grid-template-columns: 1fr;
+  }
+
+  .facilities-list {
+    grid-template-columns: 1fr;
+  }
+
+  .facility-item:last-child {
+    grid-column: auto;
+  }
+
+  .footer {
+    padding: 54px 20px 18px;
+  }
+
+  .footer-container {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .footer-bottom {
+    margin-top: 28px;
+    line-height: 1.6;
+  }
+}
