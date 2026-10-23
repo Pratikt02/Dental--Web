@@ -55,8 +55,8 @@ function showRecovery(step) {
   authTitle.textContent = step === "request" ? "Forgot your password?" : "Set a new password";
   authLead.textContent = step === "request"
     ? "Enter the email address associated with your account to get started."
-    : "Enter your reset token and choose a new password for your account.";
-  (step === "request" ? document.getElementById("forgotEmail") : document.getElementById("resetToken")).focus();
+    : "Enter the six-digit code we emailed you, then choose a new password.";
+  (step === "request" ? document.getElementById("forgotEmail") : document.getElementById("resetOtp")).focus();
 }
 
 async function loadAppointments() {
@@ -128,7 +128,6 @@ forgotPasswordButton.addEventListener("click", () => {
   showRecovery("request");
 });
 
-document.getElementById("enterResetTokenButton").addEventListener("click", () => showRecovery("reset"));
 document.querySelectorAll(".back-to-signin").forEach(button => button.addEventListener("click", () => showMode("login")));
 
 forgotPasswordForm.addEventListener("submit", async event => {
@@ -141,15 +140,15 @@ forgotPasswordForm.addEventListener("submit", async event => {
       body: JSON.stringify({ email })
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.errors?.join(" ") || "Unable to send reset link.");
+    if (!response.ok) throw new Error(result.errors?.join(" ") || "Unable to send the verification code.");
     document.getElementById("forgotStatus").textContent = result.message;
     document.getElementById("forgotStatus").className = "status success";
-    if (result.resetToken) {
-      document.getElementById("resetToken").value = result.resetToken;
-      showRecovery("reset");
-      document.getElementById("resetStatus").textContent = result.message;
-      document.getElementById("resetStatus").className = "status success";
-    }
+    document.getElementById("resetEmail").value = String(email);
+    document.getElementById("resetOtp").value = "";
+    document.getElementById("newPassword").value = "";
+    document.getElementById("resetStatus").textContent = result.message;
+    document.getElementById("resetStatus").className = "status success";
+    showRecovery("reset");
   } catch (error) {
     document.getElementById("forgotStatus").textContent = error.message;
     document.getElementById("forgotStatus").className = "status error";
@@ -173,6 +172,7 @@ resetPasswordForm.addEventListener("submit", async event => {
   } catch (error) {
     document.getElementById("resetStatus").textContent = error.message;
     document.getElementById("resetStatus").className = "status error";
+    document.getElementById("resetOtp").focus();
   }
 });
 

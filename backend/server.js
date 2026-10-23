@@ -14,13 +14,17 @@ const {
   getAppointmentTimeSlots,
   buildAppointmentEmail,
   buildReminderSms,
-  buildAppointmentStatusMessage
+  buildAppointmentStatusMessage,
+  buildPasswordResetOtpEmail
 } = require("./features");
 const { sendEmail } = require("./notifications");
 
 const PORT = Number(process.env.PORT) || 3000;
 const SITE_ROOT = path.join(__dirname, "..", "docs");
 const MAX_BODY_SIZE = 10 * 1024;
+const PASSWORD_RESET_OTP_TTL_MS = 10 * 60 * 1000;
+const PASSWORD_RESET_OTP_MAX_ATTEMPTS = 5;
+const PASSWORD_RESET_OTP_RESEND_DELAY_MS = 60 * 1000;
 const sessions = new Map();
 const contentTypes = {
   ".css": "text/css; charset=utf-8", ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
@@ -266,42 +270,114 @@ async function handleApi(request, response, url) {
   if (url.pathname === "/api/auth/forgot-password" && request.method === "POST") {
     const input = JSON.parse(await readRequestBody(request) || "{}");
     const email = clean(input.email, 160).toLowerCase();
-    const user = await database.collection("users").findOne({ email });
-    if (!user) {
-      sendJson(response, 200, { success: true, message: "If that account exists, a password reset link has been generated." });
+    const genericMessage = "If that account exists, a password reset code has been sent.";
+    const users = database.collection("users");
+    const user = await users.findOne({ email });
+    if (!user || (user.resetOtpLastSentAt &&
+        Date.now() - new Date(user.resetOtpLastSentAt).getTime() < PASSWORD_RESET_OTP_RESEND_DELAY_MS)) {
+      sendJson(response, 200, { success: true, message: genericMessage });
       return;
     }
-    const resetToken = crypto.randomBytes(32).toString("hex");
-    await database.collection("users").updateOne(
+    const otp = String(crypto.randomInt(0, 1_000_000)).padStart(6, "0");
+    const otpHash = await bcrypt.hash(otp, 10);
+    const expiresAt = new Date(Date.now() + PASSWORD_RESET_OTP_TTL_MS);
+    await users.updateOne(
       { _id: user._id },
-      { $set: { resetToken, resetTokenExpiresAt: new Date(Date.now() + 30 * 60 * 1000), updatedAt: new Date() } }
+      {
+        $set: {
+          resetOtpHash: otpHash,
+          resetOtpExpiresAt: expiresAt,
+          resetOtpAttempts: 0,
+          resetOtpLastSentAt: new Date(),
+          updatedAt: new Date()
+        },
+        $unset: { resetToken: "", resetTokenExpiresAt: "" }
+      }
     );
-    sendJson(response, 200, {
-      success: true,
-      message: "If that account exists, a password reset link has been generated.",
-      resetToken,
-      resetExpiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString()
-    });
+    try {
+      const emailContent = buildPasswordResetOtpEmail({
+        name: user.name,
+        otp,
+        expiresInMinutes: PASSWORD_RESET_OTP_TTL_MS / 60_000
+      });
+      await sendEmail({ to: user.email, ...emailContent });
+    } catch (error) {
+      await users.updateOne(
+        { _id: user._id, resetOtpHash: otpHash },
+        { $unset: { resetOtpHash: "", resetOtpExpiresAt: "", resetOtpAttempts: "", resetOtpLastSentAt: "" } }
+      );
+      console.error("Password reset OTP email failed:", error);
+      sendJson(response, 503, { success: false, errors: ["Unable to send the verification code right now. Please try again later."] });
+      return;
+    }
+    sendJson(response, 200, { success: true, message: genericMessage });
     return;
   }
 
   if (url.pathname === "/api/auth/reset-password" && request.method === "POST") {
     const input = JSON.parse(await readRequestBody(request) || "{}");
-    const token = clean(input.token, 200);
+    const email = clean(input.email, 160).toLowerCase();
+    const otp = typeof input.otp === "string" ? input.otp.trim() : "";
     const newPassword = String(input.newPassword || "");
+    if (!/^\d{6}$/.test(otp)) {
+      sendJson(response, 400, { success: false, errors: ["Enter the six-digit verification code from your email."] });
+      return;
+    }
     if (newPassword.length < 8) {
       sendJson(response, 400, { success: false, errors: ["New password must be at least 8 characters long."] });
       return;
     }
-    const user = await database.collection("users").findOne({ resetToken: token, resetTokenExpiresAt: { $gt: new Date() } });
-    if (!user) {
-      sendJson(response, 400, { success: false, errors: ["Reset link is invalid or expired."] });
+    const users = database.collection("users");
+    const user = await users.findOne({ email });
+    if (!user?.resetOtpHash || !user.resetOtpExpiresAt ||
+        new Date(user.resetOtpExpiresAt) <= new Date()) {
+      sendJson(response, 400, { success: false, errors: ["The verification code is invalid or expired. Request a new code and try again."] });
       return;
     }
-    await database.collection("users").updateOne(
-      { _id: user._id },
-      { $set: { passwordHash: await bcrypt.hash(newPassword, 12), resetToken: null, resetTokenExpiresAt: null, updatedAt: new Date() } }
+    if ((user.resetOtpAttempts || 0) >= PASSWORD_RESET_OTP_MAX_ATTEMPTS) {
+      sendJson(response, 429, { success: false, errors: ["Too many incorrect codes. Request a new code to continue."] });
+      return;
+    }
+    if (!(await bcrypt.compare(otp, user.resetOtpHash))) {
+      const attempt = await users.updateOne(
+        {
+          _id: user._id,
+          resetOtpHash: user.resetOtpHash,
+          resetOtpExpiresAt: { $gt: new Date() },
+          resetOtpAttempts: { $lt: PASSWORD_RESET_OTP_MAX_ATTEMPTS }
+        },
+        { $inc: { resetOtpAttempts: 1 } }
+      );
+      if (!attempt.matchedCount || (user.resetOtpAttempts || 0) + 1 >= PASSWORD_RESET_OTP_MAX_ATTEMPTS) {
+        sendJson(response, 429, { success: false, errors: ["Too many incorrect codes. Request a new code to continue."] });
+        return;
+      }
+      sendJson(response, 400, { success: false, errors: ["The verification code is incorrect. Please check the code and try again."] });
+      return;
+    }
+    const result = await users.updateOne(
+      {
+        _id: user._id,
+        resetOtpHash: user.resetOtpHash,
+        resetOtpExpiresAt: { $gt: new Date() },
+        resetOtpAttempts: { $lt: PASSWORD_RESET_OTP_MAX_ATTEMPTS }
+      },
+      {
+        $set: { passwordHash: await bcrypt.hash(newPassword, 12), updatedAt: new Date() },
+        $unset: {
+          resetOtpHash: "",
+          resetOtpExpiresAt: "",
+          resetOtpAttempts: "",
+          resetOtpLastSentAt: "",
+          resetToken: "",
+          resetTokenExpiresAt: ""
+        }
+      }
     );
+    if (!result.matchedCount) {
+      sendJson(response, 400, { success: false, errors: ["The verification code is invalid or expired. Request a new code and try again."] });
+      return;
+    }
     sendJson(response, 200, { success: true, message: "Password updated successfully." });
     return;
   }
@@ -566,7 +642,19 @@ async function handleApi(request, response, url) {
   if (url.pathname === "/api/my-profile" && request.method === "GET") {
     if (!requirePatient(request, response)) return;
     const session = getSession(request);
-    const user = await database.collection("users").findOne({ _id: new ObjectId(session.userId) }, { projection: { passwordHash: 0, resetToken: 0, resetTokenExpiresAt: 0 } });
+    const user = await database.collection("users").findOne({
+      _id: new ObjectId(session.userId)
+    }, {
+      projection: {
+        passwordHash: 0,
+        resetToken: 0,
+        resetTokenExpiresAt: 0,
+        resetOtpHash: 0,
+        resetOtpExpiresAt: 0,
+        resetOtpAttempts: 0,
+        resetOtpLastSentAt: 0
+      }
+    });
     sendJson(response, 200, { success: true, user });
     return;
   }

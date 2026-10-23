@@ -58,22 +58,25 @@
         </form>
 
         <form id="forgotPasswordForm" class="patient-form secondary-form" hidden>
-          <div class="recovery-note"><span aria-hidden="true">↗</span><span>We’ll help you get back into your account.</span></div>
+          <div class="recovery-note"><span aria-hidden="true">↗</span><span>We’ll email a six-digit code to verify it’s you.</span></div>
           <div class="field">
             <label for="forgotEmail">Email address</label>
             <input id="forgotEmail" name="email" type="email" autocomplete="email" placeholder="The email linked to your account" required>
           </div>
           <button class="primary-auth-button" type="submit"><span>Continue</span><span aria-hidden="true">→</span></button>
           <p id="forgotStatus" class="status" role="alert" aria-live="polite"></p>
-          <button id="enterResetTokenButton" class="link-button" type="button">Already have a reset token?</button>
           <button class="back-to-signin link-button" type="button">← Back to sign in</button>
         </form>
 
         <form id="resetPasswordForm" class="patient-form secondary-form" hidden>
-          <div class="recovery-note"><span aria-hidden="true">⌁</span><span>Choose a new password with at least 8 characters.</span></div>
+          <div class="recovery-note"><span aria-hidden="true">⌁</span><span>Enter the code emailed to you. It expires after 10 minutes.</span></div>
           <div class="field">
-            <label for="resetToken">Password reset token</label>
-            <input id="resetToken" name="token" type="text" autocomplete="one-time-code" placeholder="Paste your reset token" required>
+            <label for="resetEmail">Email address</label>
+            <input id="resetEmail" name="email" type="email" autocomplete="email" readonly required>
+          </div>
+          <div class="field">
+            <label for="resetOtp">Six-digit verification code</label>
+            <input id="resetOtp" name="otp" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="000000" aria-describedby="resetStatus" required>
           </div>
           <div class="field">
             <label for="newPassword">New password</label>

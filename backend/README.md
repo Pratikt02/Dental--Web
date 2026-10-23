@@ -30,6 +30,8 @@ Copy the notification settings above into `backend/.env` and replace the example
 
 Email is used for appointment requests, status changes, and reminders. Reminders are scheduled 24 hours and 2 hours before confirmed appointments using the clinic's India time (UTC+05:30). Failed appointment and status notifications, and failed reminders, are retried every five minutes up to five total attempts. Delivery attempts and provider errors are recorded on each appointment in `notificationDelivery`; check the backend logs and provider console when troubleshooting. Never commit `.env`.
 
+Patient password recovery sends a six-digit OTP through the same SMTP provider. OTPs expire after 10 minutes, are stored as bcrypt hashes, and allow up to five verification attempts. Requests are limited to one code per account per minute.
+
 ## 2. Create the admin account
 
 From this `backend` directory:

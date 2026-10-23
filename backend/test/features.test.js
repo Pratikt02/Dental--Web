@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { getTreatmentPricing, buildAppointmentEmail, buildReminderSms, normalizeAppointmentTime, isClinicTimeAvailable, getAppointmentTimeSlots } = require('../features');
+const { getTreatmentPricing, buildAppointmentEmail, buildReminderSms, normalizeAppointmentTime, isClinicTimeAvailable, getAppointmentTimeSlots, buildPasswordResetOtpEmail } = require('../features');
 
 test('treatment pricing returns a positive value for known treatment', () => {
   assert.ok(getTreatmentPricing('Teeth Cleaning / Scaling') > 0);
@@ -41,4 +41,12 @@ test('doctor schedule slots include valid half-hour times within the shift', () 
   assert.deepEqual(getAppointmentTimeSlots('10:00', '11:00'), ['10:00', '10:30', '11:00']);
   assert.deepEqual(getAppointmentTimeSlots('08:30', '10:00'), []);
   assert.deepEqual(getAppointmentTimeSlots('11:00', '10:00'), []);
+});
+
+test('password reset OTP email includes the code and expiry instructions', () => {
+  const email = buildPasswordResetOtpEmail({ name: 'John', otp: '004218', expiresInMinutes: 10 });
+  assert.match(email.subject, /password reset code/i);
+  assert.match(email.text, /004218/);
+  assert.match(email.text, /10 minutes/);
+  assert.match(email.text, /John/);
 });

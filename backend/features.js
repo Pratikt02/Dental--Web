@@ -118,6 +118,13 @@ function buildAppointmentStatusMessage({ name, date, time, status }) {
   return `Hi ${name || "Patient"}, your ${CLINIC_NAME} appointment on ${date} at ${time} is now ${status}. Please contact the clinic if you have questions.`;
 }
 
+function buildPasswordResetOtpEmail({ name, otp, expiresInMinutes }) {
+  return {
+    subject: `Your password reset code - ${CLINIC_NAME}`,
+    text: `Hello ${name || "Patient"},\n\nYour password reset code for ${CLINIC_NAME} is: ${otp}\n\nThis code expires in ${expiresInMinutes} minutes and can only be used once. If you did not request a password reset, you can ignore this email.\n\nRegards,\n${CLINIC_NAME} Team`
+  };
+}
+
 module.exports = {
   treatmentPricing,
   getTreatmentPricing,
@@ -128,5 +135,6 @@ module.exports = {
   getAppointmentTimeSlots,
   buildAppointmentEmail,
   buildReminderSms,
-  buildAppointmentStatusMessage
+  buildAppointmentStatusMessage,
+  buildPasswordResetOtpEmail
 };
