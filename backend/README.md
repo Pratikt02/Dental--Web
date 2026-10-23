@@ -66,6 +66,8 @@ Open:
 - Appointment status updates: pending, confirmed, completed, cancelled
 - Duplicate appointment time protection
 - Public date availability endpoint
+- Doctor-specific appointment availability based on saved schedules
+- Admin appointment deletion with a confirmation prompt
 - Dashboard appointment search and summary counts
 - Analytics endpoint: `GET /api/analytics`
 - SMTP email appointment notifications

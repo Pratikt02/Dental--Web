@@ -97,6 +97,8 @@ td a { color: var(--blue); text-decoration: none; }
 .status-select.completed { color: #1f5b93; background: #eaf3ff; }
 .status-select.cancelled { color: #a63b35; background: #fff1ef; }
 .notes-input, .doctor-input { margin-top: 10px; min-height: 44px; font-size: 13px; padding: 9px 10px; }
+.delete-appointment-button { display: block; margin-top: 8px; border: 1px solid #d9857d; border-radius: 9px; padding: 7px 10px; color: #a63b35; background: #fff1ef; font-size: 12px; font-weight: 700; cursor: pointer; }
+.delete-appointment-button:disabled { opacity: .6; cursor: wait; }
 .notes-input { resize: vertical; min-height: 68px; }
 .empty-state { padding: 42px 12px; color: var(--muted); text-align: center; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
@@ -135,4 +137,5 @@ body.dark-mode td, body.dark-mode .schedule-item { border-color: #2c4b50; }
 body.dark-mode .schedule-item { background: #10252b; color: #e9f5f3; }
 body.dark-mode .schedule-badge, body.dark-mode .schedule-summary { background: #21464c; }
 body.dark-mode .button-secondary { border-color: #4a777b; background: #17363c; color: #9ee1d9; }
+body.dark-mode .delete-appointment-button { border-color: #9c5550; background: #422e30; color: #ffaaa3; }
 body.dark-mode .theme-toggle { background: #ef8354; color: #10252b; }

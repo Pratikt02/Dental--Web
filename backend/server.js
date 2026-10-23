@@ -10,6 +10,8 @@ const {
   getTreatmentPricing,
   normalizeAppointmentTime,
   isClinicTimeAvailable,
+  buildAppointmentTimeOptions,
+  getAppointmentTimeSlots,
   buildAppointmentEmail,
   buildReminderSms,
   buildAppointmentStatusMessage
@@ -79,6 +81,7 @@ async function notifyAppointment(database, appointmentId, appointment, event, on
     treatment: appointment.treatment,
     date: appointment.appointmentDate,
     time: appointment.appointmentTime,
+    doctor: appointment.doctor,
     price: appointment.price,
     status
   });
@@ -161,6 +164,13 @@ function appointmentTimestamp(appointment) {
   const [year, month, day] = appointment.appointmentDate.split("-").map(Number);
   const [hour, minute] = appointment.appointmentTime.split(":").map(Number);
   return new Date(Date.UTC(year, month - 1, day, hour, minute) - 5.5 * 60 * 60 * 1000);
+}
+
+function appointmentWeekday(date) {
+  const [year, month, day] = date.split("-").map(Number);
+  return ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][
+    new Date(Date.UTC(year, month - 1, day)).getUTCDay()
+  ];
 }
 
 let reminderCheckRunning = false;
@@ -333,8 +343,44 @@ async function handleApi(request, response, url) {
   if (url.pathname === "/api/appointments" && request.method === "POST") {
     const { appointment, errors } = validateAppointment(JSON.parse(await readRequestBody(request) || "{}"));
     if (errors.length) { sendJson(response, 400, { success: false, errors }); return; }
-    const duplicate = await appointments.findOne({ appointmentDate: appointment.appointmentDate, appointmentTime: appointment.appointmentTime, status: { $nin: ["cancelled"] } });
-    if (duplicate) { sendJson(response, 409, { success: false, errors: ["That time slot is already requested. Please choose another time."] }); return; }
+    const doctorSchedules = await database.collection("doctorSchedules").find().toArray();
+    if (doctorSchedules.length) {
+      const schedulesForDate = doctorSchedules.filter(schedule =>
+        schedule.day === appointmentWeekday(appointment.appointmentDate) &&
+        (!appointment.doctor || schedule.doctor === appointment.doctor)
+      );
+      const scheduledDoctors = [...new Set(schedulesForDate
+        .filter(schedule => getAppointmentTimeSlots(schedule.startTime, schedule.endTime).includes(appointment.appointmentTime))
+        .map(schedule => schedule.doctor))];
+      if (!scheduledDoctors.length) {
+        sendJson(response, 400, { success: false, errors: ["The selected doctor is not available at that time. Please choose another slot."] });
+        return;
+      }
+
+      const occupied = await appointments.find({
+        appointmentDate: appointment.appointmentDate,
+        appointmentTime: appointment.appointmentTime,
+        doctor: { $in: scheduledDoctors },
+        status: { $nin: ["cancelled"] }
+      }).project({ doctor: 1, _id: 0 }).toArray();
+      const occupiedDoctors = new Set(occupied.map(item => item.doctor));
+      const availableDoctor = scheduledDoctors.find(doctor => !occupiedDoctors.has(doctor));
+      if (!availableDoctor) {
+        sendJson(response, 409, { success: false, errors: ["That doctor's time slot is already requested. Please choose another time."] });
+        return;
+      }
+      appointment.doctor = availableDoctor;
+    } else {
+      const duplicate = await appointments.findOne({
+        appointmentDate: appointment.appointmentDate,
+        appointmentTime: appointment.appointmentTime,
+        status: { $nin: ["cancelled"] }
+      });
+      if (duplicate) {
+        sendJson(response, 409, { success: false, errors: ["That time slot is already requested. Please choose another time."] });
+        return;
+      }
+    }
     const session = getSession(request);
     const saved = {
       ...appointment,
@@ -364,8 +410,46 @@ async function handleApi(request, response, url) {
       sendJson(response, 400, { success: false, errors: ["A valid date is required."] });
       return;
     }
-    const booked = await appointments.find({ appointmentDate: date, status: { $nin: ["cancelled"] } }).project({ appointmentTime: 1, _id: 0 }).toArray();
-    sendJson(response, 200, { success: true, bookedTimes: booked.map(item => item.appointmentTime) });
+    const doctor = clean(url.searchParams.get("doctor"), 100);
+    const allSchedules = await database.collection("doctorSchedules").find().toArray();
+    const schedulesForDate = allSchedules.filter(schedule =>
+      schedule.day === appointmentWeekday(date) && (!doctor || schedule.doctor === doctor)
+    );
+    if (!allSchedules.length) {
+      const booked = await appointments.find({ appointmentDate: date, status: { $nin: ["cancelled"] } })
+        .project({ appointmentTime: 1, _id: 0 }).toArray();
+      const bookedTimes = [...new Set(booked.map(item => item.appointmentTime))];
+      sendJson(response, 200, {
+        success: true,
+        bookedTimes,
+        availableTimes: buildAppointmentTimeOptions().map(option => option.value).filter(time => !bookedTimes.includes(time))
+      });
+      return;
+    }
+
+    const bookedAppointments = await appointments.find({
+      appointmentDate: date,
+      status: { $nin: ["cancelled"] },
+      ...(doctor ? { doctor } : {})
+    }).project({ appointmentTime: 1, doctor: 1, _id: 0 }).toArray();
+    const availableTimes = [...new Set(schedulesForDate.flatMap(schedule =>
+      getAppointmentTimeSlots(schedule.startTime, schedule.endTime)
+    ))].filter(time => {
+      const availableDoctors = schedulesForDate
+        .filter(schedule => getAppointmentTimeSlots(schedule.startTime, schedule.endTime).includes(time))
+        .map(schedule => schedule.doctor);
+      return !bookedAppointments.some(item =>
+        item.appointmentTime === time && (!doctor || item.doctor === doctor) &&
+        (!availableDoctors.length || availableDoctors.includes(item.doctor))
+      );
+    }).sort();
+    sendJson(response, 200, { success: true, bookedTimes: [], availableTimes });
+    return;
+  }
+
+  if (url.pathname === "/api/doctors" && request.method === "GET") {
+    const schedules = await database.collection("doctorSchedules").find().project({ doctor: 1, _id: 0 }).toArray();
+    sendJson(response, 200, { success: true, doctors: [...new Set(schedules.map(item => item.doctor).filter(Boolean))].sort() });
     return;
   }
 
@@ -401,6 +485,20 @@ async function handleApi(request, response, url) {
   }
 
   const appointmentMatch = url.pathname.match(/^\/api\/appointments\/([^/]+)$/);
+  if (appointmentMatch && request.method === "DELETE") {
+    if (!requireRole(request, response, "admin")) return;
+    if (!ObjectId.isValid(appointmentMatch[1])) {
+      sendJson(response, 400, { success: false, errors: ["Invalid appointment ID."] });
+      return;
+    }
+    const result = await appointments.deleteOne({ _id: new ObjectId(appointmentMatch[1]) });
+    sendJson(response, result.deletedCount ? 200 : 404, {
+      success: Boolean(result.deletedCount),
+      message: result.deletedCount ? "Appointment deleted." : "Appointment not found."
+    });
+    return;
+  }
+
   if (appointmentMatch && request.method === "PATCH") {
     if (!requireRole(request, response, "admin")) return;
     const payload = JSON.parse(await readRequestBody(request) || "{}");
@@ -419,9 +517,34 @@ async function handleApi(request, response, url) {
     if (Object.keys(update).length === 0) { sendJson(response, 400, { success: false, errors: ["No valid appointment update provided."] }); return; }
     if (!ObjectId.isValid(appointmentMatch[1])) { sendJson(response, 400, { success: false, errors: ["Invalid appointment ID."] }); return; }
     const appointmentId = new ObjectId(appointmentMatch[1]);
-    const existing = update.status
-      ? await appointments.findOne({ _id: appointmentId })
-      : null;
+    const existing = await appointments.findOne({ _id: appointmentId });
+    if (update.doctor && existing) {
+      const doctorSchedules = await database.collection("doctorSchedules").find({
+        doctor: update.doctor,
+        day: appointmentWeekday(existing.appointmentDate)
+      }).toArray();
+      if (doctorSchedules.length && !doctorSchedules.some(schedule =>
+        getAppointmentTimeSlots(schedule.startTime, schedule.endTime).includes(existing.appointmentTime)
+      )) {
+        sendJson(response, 400, { success: false, errors: ["The selected doctor is not scheduled at this appointment time."] });
+        return;
+      }
+      if (!doctorSchedules.length && (await database.collection("doctorSchedules").countDocuments()) > 0) {
+        sendJson(response, 400, { success: false, errors: ["The selected doctor is not scheduled on this appointment day."] });
+        return;
+      }
+      const conflict = await appointments.findOne({
+        _id: { $ne: appointmentId },
+        appointmentDate: existing.appointmentDate,
+        appointmentTime: existing.appointmentTime,
+        doctor: update.doctor,
+        status: { $nin: ["cancelled"] }
+      });
+      if (conflict) {
+        sendJson(response, 409, { success: false, errors: ["That doctor already has an appointment at this time."] });
+        return;
+      }
+    }
     const result = await appointments.updateOne({ _id: appointmentId }, { $set: { ...update, updatedAt: new Date() } });
     if (result.matchedCount && update.status && existing?.status !== update.status) {
       await notifyAppointment(database, appointmentId, { ...existing, ...update }, "status");
@@ -487,8 +610,13 @@ async function handleApi(request, response, url) {
       endTime: clean(payload.endTime, 5),
       createdAt: new Date()
     };
-    if (!record.doctor || !record.day || !record.startTime || !record.endTime) {
-      sendJson(response, 400, { success: false, errors: ["Doctor, day, start time, and end time are required."] });
+    const startMinutes = normalizeAppointmentTime(record.startTime);
+    const endMinutes = normalizeAppointmentTime(record.endTime);
+    if (!record.doctor || !record.day || !startMinutes || !endMinutes ||
+        !["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].includes(record.day) ||
+        !isClinicTimeAvailable(startMinutes) || !isClinicTimeAvailable(endMinutes) ||
+        startMinutes >= endMinutes || !getAppointmentTimeSlots(startMinutes, endMinutes).length) {
+      sendJson(response, 400, { success: false, errors: ["Choose a doctor and day, and enter a valid clinic shift using 30-minute times between 9:00 AM and 7:00 PM."] });
       return;
     }
     const result = await database.collection("doctorSchedules").insertOne(record);

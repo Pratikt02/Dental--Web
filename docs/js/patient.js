@@ -7,6 +7,10 @@ const appointmentList = document.getElementById("appointmentList");
 const forgotPasswordButton = document.getElementById("forgotPasswordButton");
 const forgotPasswordForm = document.getElementById("forgotPasswordForm");
 const resetPasswordForm = document.getElementById("resetPasswordForm");
+const authTitle = document.getElementById("authTitle");
+const authEyebrow = document.getElementById("authEyebrow");
+const authLead = document.getElementById("authLead");
+const authTabs = document.querySelector(".auth-tabs");
 const profileForm = document.getElementById("profileForm");
 const profileStatus = document.getElementById("profileStatus");
 const patientTokenKey = "sakthiDentalPatientSession";
@@ -24,12 +28,35 @@ function formatAppointment(item) {
 
 function showMode(mode) {
   authMode = mode;
+  authForm.hidden = false;
+  authTabs.hidden = false;
+  forgotPasswordForm.hidden = true;
+  resetPasswordForm.hidden = true;
+  authEyebrow.textContent = "PATIENT PORTAL";
+  authTitle.textContent = mode === "login" ? "Welcome back" : "Create your account";
+  authLead.textContent = mode === "login"
+    ? "Sign in to view your appointments and manage your care."
+    : "Create an account to keep your appointments and care details together.";
   document.querySelectorAll(".auth-tab").forEach(tab => tab.classList.toggle("active", tab.dataset.mode === mode));
+  document.querySelectorAll(".auth-tab").forEach(tab => tab.setAttribute("aria-selected", String(tab.dataset.mode === mode)));
   document.getElementById("nameField").hidden = mode === "login";
   document.getElementById("phoneField").hidden = mode === "login";
   document.getElementById("patientName").required = mode === "register";
   document.getElementById("patientPhone").required = mode === "register";
   document.getElementById("authSubmitText").textContent = mode === "login" ? "Sign in" : "Create account";
+}
+
+function showRecovery(step) {
+  authForm.hidden = true;
+  authTabs.hidden = true;
+  forgotPasswordForm.hidden = step !== "request";
+  resetPasswordForm.hidden = step !== "reset";
+  authEyebrow.textContent = "ACCOUNT RECOVERY";
+  authTitle.textContent = step === "request" ? "Forgot your password?" : "Set a new password";
+  authLead.textContent = step === "request"
+    ? "Enter the email address associated with your account to get started."
+    : "Enter your reset token and choose a new password for your account.";
+  (step === "request" ? document.getElementById("forgotEmail") : document.getElementById("resetToken")).focus();
 }
 
 async function loadAppointments() {
@@ -40,7 +67,7 @@ async function loadAppointments() {
     if (!response.ok) throw new Error(result.errors?.join(" ") || "Unable to load appointments.");
     appointmentList.innerHTML = result.appointments.length ? result.appointments.map(item => `
       <article class="appointment-card">
-        <div><span class="appointment-label">${escapeHtml(item.treatment)}</span><h2>${escapeHtml(formatAppointment(item))}</h2><p>${escapeHtml(item.message || "No additional information")}</p></div>
+        <div><span class="appointment-label">${escapeHtml(item.treatment)}</span><h2>${escapeHtml(formatAppointment(item))}</h2><p>${escapeHtml(item.doctor ? `Dentist: ${item.doctor}` : "Dentist to be assigned")}</p><p>${escapeHtml(item.message || "No additional information")}</p></div>
         <div class="appointment-meta"><span class="appointment-status ${escapeHtml(item.status)}">${escapeHtml(item.status)}</span>${item.status === "pending" ? `<button class="cancel-button" data-id="${escapeHtml(item._id)}" type="button">Cancel request</button>` : ""}</div>
       </article>
     `).join("") : '<p class="empty-state">You have no appointment requests yet.</p>';
@@ -98,11 +125,11 @@ authForm.addEventListener("submit", async event => {
 });
 
 forgotPasswordButton.addEventListener("click", () => {
-  forgotPasswordForm.hidden = false;
-  resetPasswordForm.hidden = false;
-  authStatus.textContent = "Enter your email to receive a reset link.";
-  authStatus.className = "status";
+  showRecovery("request");
 });
+
+document.getElementById("enterResetTokenButton").addEventListener("click", () => showRecovery("reset"));
+document.querySelectorAll(".back-to-signin").forEach(button => button.addEventListener("click", () => showMode("login")));
 
 forgotPasswordForm.addEventListener("submit", async event => {
   event.preventDefault();
@@ -117,7 +144,12 @@ forgotPasswordForm.addEventListener("submit", async event => {
     if (!response.ok) throw new Error(result.errors?.join(" ") || "Unable to send reset link.");
     document.getElementById("forgotStatus").textContent = result.message;
     document.getElementById("forgotStatus").className = "status success";
-    if (result.resetToken) document.getElementById("resetToken").value = result.resetToken;
+    if (result.resetToken) {
+      document.getElementById("resetToken").value = result.resetToken;
+      showRecovery("reset");
+      document.getElementById("resetStatus").textContent = result.message;
+      document.getElementById("resetStatus").className = "status success";
+    }
   } catch (error) {
     document.getElementById("forgotStatus").textContent = error.message;
     document.getElementById("forgotStatus").className = "status error";
@@ -135,9 +167,9 @@ resetPasswordForm.addEventListener("submit", async event => {
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.errors?.join(" ") || "Unable to reset password.");
-    document.getElementById("resetStatus").textContent = result.message;
-    document.getElementById("resetStatus").className = "status success";
     resetPasswordForm.reset();
+    document.getElementById("resetStatus").textContent = `${result.message} You can now sign in with your new password.`;
+    document.getElementById("resetStatus").className = "status success";
   } catch (error) {
     document.getElementById("resetStatus").textContent = error.message;
     document.getElementById("resetStatus").className = "status error";

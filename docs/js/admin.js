@@ -71,6 +71,7 @@ async function loadSchedules() {
     if (!response.ok) throw new Error(result.errors?.join(" ") || "Unable to load schedules.");
     schedules = result.schedules || [];
     renderScheduleList();
+    renderAppointments();
   } catch (error) {
     dashboardStatus.textContent = error.message;
     dashboardStatus.className = "status error";
@@ -103,7 +104,13 @@ function renderAppointments() {
           ${["pending", "confirmed", "completed", "cancelled"].map(status => `<option ${item.status === status ? "selected" : ""}>${status}</option>`).join("")}
         </select>
         <textarea class="notes-input" data-id="${escapeHtml(item._id)}" placeholder="Admin notes">${escapeHtml(item.adminNotes || "")}</textarea>
-        <input class="doctor-input" data-id="${escapeHtml(item._id)}" value="${escapeHtml(item.doctor || "")}" placeholder="Doctor name">
+        <select class="doctor-input" data-id="${escapeHtml(item._id)}" aria-label="Assign doctor to ${escapeHtml(item.name)}">
+          <option value="">Unassigned</option>
+          ${[...new Set([...schedules.map(schedule => schedule.doctor), item.doctor].filter(Boolean))].sort().map(doctor =>
+            `<option value="${escapeHtml(doctor)}" ${item.doctor === doctor ? "selected" : ""}>${escapeHtml(doctor)}</option>`
+          ).join("")}
+        </select>
+        <button class="delete-appointment-button" data-id="${escapeHtml(item._id)}" type="button">Delete appointment</button>
       </td>
     </tr>
   `).join("");
@@ -222,6 +229,31 @@ scheduleForm.addEventListener("submit", async event => {
 
 searchInput.addEventListener("input", renderAppointments);
 
+appointmentsBody.addEventListener("click", async event => {
+  if (!event.target.matches(".delete-appointment-button")) return;
+  const button = event.target;
+  const appointment = appointments.find(item => item._id === button.dataset.id);
+  if (!appointment || !window.confirm(`Delete the appointment for ${appointment.name}? This cannot be undone.`)) return;
+  button.disabled = true;
+  try {
+    const response = await fetch(`/api/appointments/${button.dataset.id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${adminToken}` }
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.errors?.join(" ") || result.message || "Unable to delete appointment.");
+    appointments = appointments.filter(item => item._id !== button.dataset.id);
+    renderSummary();
+    renderAppointments();
+    dashboardStatus.textContent = result.message;
+    dashboardStatus.className = "status success";
+  } catch (error) {
+    dashboardStatus.textContent = error.message;
+    dashboardStatus.className = "status error";
+    button.disabled = false;
+  }
+});
+
 appointmentsBody.addEventListener("change", async event => {
   if (event.target.matches(".status-select")) {
     const select = event.target;
@@ -261,16 +293,22 @@ appointmentsBody.addEventListener("change", async event => {
 
   if (event.target.matches(".doctor-input")) {
     const doctorField = event.target;
-    const response = await fetch(`/api/appointments/${doctorField.dataset.id}`, {
-      method: "PATCH",
-      headers: { Authorization: `Bearer ${adminToken}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ doctor: doctorField.value })
-    });
-    if (response.ok) {
-      const appointment = appointments.find(item => item._id === doctorField.dataset.id);
+    const appointment = appointments.find(item => item._id === doctorField.dataset.id);
+    try {
+      const response = await fetch(`/api/appointments/${doctorField.dataset.id}`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${adminToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ doctor: doctorField.value })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.errors?.join(" ") || "Unable to assign the doctor.");
       if (appointment) appointment.doctor = doctorField.value;
       dashboardStatus.textContent = "Doctor assignment saved.";
       dashboardStatus.className = "status success";
+    } catch (error) {
+      doctorField.value = appointment?.doctor || "";
+      dashboardStatus.textContent = error.message;
+      dashboardStatus.className = "status error";
     }
   }
 });

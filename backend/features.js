@@ -82,9 +82,19 @@ function buildAppointmentTimeOptions() {
   return options;
 }
 
+function getAppointmentTimeSlots(startTime, endTime) {
+  const start = normalizeAppointmentTime(startTime);
+  const end = normalizeAppointmentTime(endTime);
+  if (!start || !end || !isClinicTimeAvailable(start) || !isClinicTimeAvailable(end)) return [];
+
+  return buildAppointmentTimeOptions()
+    .filter(option => option.value >= start && option.value <= end)
+    .map(option => option.value);
+}
+
 const CLINIC_NAME = "Dental Pro";
 
-function buildAppointmentEmail({ name, treatment, date, time, price, status = "pending" }) {
+function buildAppointmentEmail({ name, treatment, date, time, price, doctor, status = "pending" }) {
   const formattedPrice = formatCurrency(price || getTreatmentPricing(treatment));
   const subject = status === "pending"
     ? `Appointment Request Received - ${CLINIC_NAME}`
@@ -96,7 +106,7 @@ function buildAppointmentEmail({ name, treatment, date, time, price, status = "p
 
   return {
     subject,
-    body: `Hello ${name || "Patient"},\n\nThank you for choosing ${CLINIC_NAME}.\n\n${statusMessage}\n\nOur clinic team will confirm your appointment shortly. If you have any questions or need to make changes, please contact the clinic directly.\n\nAppointment Details:\n- Treatment: ${treatment}\n- Date: ${date}\n- Time: ${time}\n- Estimated Cost: ${formattedPrice}\n\nPlease arrive 30 minutes before your scheduled appointment.\n\nThank you for trusting ${CLINIC_NAME} with your dental care.\n\nRegards,\n${CLINIC_NAME} Team`
+    body: `Hello ${name || "Patient"},\n\nThank you for choosing ${CLINIC_NAME}.\n\n${statusMessage}\n\nOur clinic team will confirm your appointment shortly. If you have any questions or need to make changes, please contact the clinic directly.\n\nAppointment Details:\n- Treatment: ${treatment}\n${doctor ? `- Dentist: ${doctor}\n` : ""}- Date: ${date}\n- Time: ${time}\n- Estimated Cost: ${formattedPrice}\n\nPlease arrive 30 minutes before your scheduled appointment.\n\nThank you for trusting ${CLINIC_NAME} with your dental care.\n\nRegards,\n${CLINIC_NAME} Team`
   };
 }
 
@@ -115,6 +125,7 @@ module.exports = {
   normalizeAppointmentTime,
   isClinicTimeAvailable,
   buildAppointmentTimeOptions,
+  getAppointmentTimeSlots,
   buildAppointmentEmail,
   buildReminderSms,
   buildAppointmentStatusMessage

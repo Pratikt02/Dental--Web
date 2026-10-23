@@ -1,19 +1,20 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { getTreatmentPricing, buildAppointmentEmail, buildReminderSms, normalizeAppointmentTime, isClinicTimeAvailable } = require('../features');
+const { getTreatmentPricing, buildAppointmentEmail, buildReminderSms, normalizeAppointmentTime, isClinicTimeAvailable, getAppointmentTimeSlots } = require('../features');
 
 test('treatment pricing returns a positive value for known treatment', () => {
   assert.ok(getTreatmentPricing('Teeth Cleaning / Scaling') > 0);
 });
 
 test('email confirmation message includes patient name, date and clinic details', () => {
-  const email = buildAppointmentEmail({ name: 'John', treatment: 'Root Canal Treatment', date: '2026-10-01', time: '10:30' });
+  const email = buildAppointmentEmail({ name: 'John', treatment: 'Root Canal Treatment', doctor: 'Dr. Rao', date: '2026-10-01', time: '10:30' });
   assert.match(email.subject, /Appointment Request Received/i);
   assert.match(email.body, /John/i);
   assert.match(email.body, /Root Canal Treatment/i);
   assert.match(email.body, /2026-10-01/i);
   assert.match(email.body, /10:30/i);
+  assert.match(email.body, /Dr\. Rao/i);
   assert.match(email.body, /30 minutes/i);
   assert.match(email.body, /Dental Pro/i);
 });
@@ -34,4 +35,10 @@ test('appointment times normalize to 24-hour clinic slots', () => {
   assert.equal(isClinicTimeAvailable('19:00'), true);
   assert.equal(isClinicTimeAvailable('08:30 AM'), false);
   assert.equal(isClinicTimeAvailable('07:30 PM'), false);
+});
+
+test('doctor schedule slots include valid half-hour times within the shift', () => {
+  assert.deepEqual(getAppointmentTimeSlots('10:00', '11:00'), ['10:00', '10:30', '11:00']);
+  assert.deepEqual(getAppointmentTimeSlots('08:30', '10:00'), []);
+  assert.deepEqual(getAppointmentTimeSlots('11:00', '10:00'), []);
 });
