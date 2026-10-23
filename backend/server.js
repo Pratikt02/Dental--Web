@@ -669,6 +669,7 @@ async function handleApi(request, response, url) {
     const update = { name, phone, updatedAt: new Date() };
     if (password.length >= 8) update.passwordHash = await bcrypt.hash(password, 12);
     await database.collection("users").updateOne({ _id: new ObjectId(session.userId) }, { $set: update });
+    session.name = name;
     sendJson(response, 200, { success: true, message: "Profile updated successfully." });
     return;
   }

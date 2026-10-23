@@ -1,17 +1,96 @@
-// Scroll animation for cards
-const observer = new IntersectionObserver(
-  entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("show");
-      }
-    });
-  },
-  { threshold: 0.2 }
-);
+// Reveal home-page content as it enters view, while preserving reduced-motion preferences.
+const treatmentCards = document.querySelectorAll(".treatment-card");
+const isHomePage = Boolean(document.querySelector(".hero"));
+const isAboutPage = Boolean(document.querySelector(".about-page"));
+const isFaqPage = Boolean(document.querySelector(".faq-page"));
+const homeRevealTargets = document.querySelectorAll([
+  ".assurance-content",
+  ".trust-strip",
+  ".assurance-banners img",
+  ".why-us > .section-kicker",
+  ".why-us > h2",
+  ".why-grid .card",
+  ".core-treatments > .section-kicker",
+  ".core-treatments > .section-title",
+  ".core-treatments .treatment-card",
+  ".treatment-cta",
+  ".tips-heading",
+  ".tip-card",
+  ".tips-footer",
+  ".testimonial-heading",
+  ".testimonials .testimonial-card",
+  ".testimonial-footer",
+  ".facilities-heading",
+  ".facility-item"
+].join(","));
+const aboutRevealTargets = document.querySelectorAll([
+  ".about-hero-copy",
+  ".about-highlight",
+  ".about-story-heading",
+  ".about-story-copy p",
+  ".vm-card",
+  ".team-heading",
+  ".doctor-list li",
+  ".about-cta"
+].join(","));
+const faqRevealTargets = document.querySelectorAll([
+  ".faq-hero-copy",
+  ".faq-hero-note",
+  ".faq-content-heading",
+  ".faq-item",
+  ".faq-cta"
+].join(","));
+const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-document.querySelectorAll(".treatment-card").forEach(card => {
-  observer.observe(card);
+if ("IntersectionObserver" in window && !prefersReducedMotion) {
+  const revealObserver = new IntersectionObserver(
+    entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("show", "is-visible");
+        } else if (document.body.classList.contains("home-motion-ready") || document.body.classList.contains("about-motion-ready") || document.body.classList.contains("faq-motion-ready")) {
+          entry.target.classList.remove("is-visible");
+        }
+      });
+    },
+    { threshold: 0.12, rootMargin: "0px 0px -36px 0px" }
+  );
+
+  if (isHomePage) {
+    document.body.classList.add("home-motion-ready");
+    homeRevealTargets.forEach(target => {
+      target.classList.add("home-reveal");
+      revealObserver.observe(target);
+    });
+  } else if (isAboutPage) {
+    document.body.classList.add("about-motion-ready");
+    aboutRevealTargets.forEach(target => {
+      target.classList.add("about-reveal");
+      revealObserver.observe(target);
+    });
+  } else if (isFaqPage) {
+    document.body.classList.add("faq-motion-ready");
+    faqRevealTargets.forEach(target => {
+      target.classList.add("faq-reveal");
+      revealObserver.observe(target);
+    });
+  } else {
+    treatmentCards.forEach(card => revealObserver.observe(card));
+  }
+} else {
+  treatmentCards.forEach(card => card.classList.add("show"));
+}
+
+document.querySelectorAll(".faq-question").forEach(question => {
+  question.addEventListener("click", () => {
+    const answer = document.getElementById(question.getAttribute("aria-controls"));
+    const isExpanded = question.getAttribute("aria-expanded") === "true";
+    question.setAttribute("aria-expanded", String(!isExpanded));
+    question.classList.toggle("active", !isExpanded);
+    answer.setAttribute("aria-hidden", String(isExpanded));
+    answer.style.maxHeight = isExpanded ? null : `${answer.scrollHeight}px`;
+    question.closest(".faq-item").classList.toggle("is-open", !isExpanded);
+  });
 });
 
 // Appointment booking

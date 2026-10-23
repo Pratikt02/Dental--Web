@@ -92,30 +92,78 @@
 
     <section id="portalView" class="portal-panel" hidden>
       <header class="portal-header">
-        <div><p class="eyebrow">Patient portal</p><h1 id="welcomeTitle">Your appointments</h1></div>
-        <button id="patientLogout" class="secondary-button" type="button">Sign out</button>
+        <div class="portal-heading">
+          <a class="portal-brand" href="index.html" aria-label="Sakthi Dental Clinic home"><img src="clinic/logo.png" alt="Sakthi Dental Clinic"></a>
+          <div class="portal-heading-copy">
+            <p class="eyebrow">YOUR PATIENT PORTAL</p>
+            <h1><span id="greetingTitle">Good day,</span> <span id="welcomeTitle">Patient</span></h1>
+            <p id="portalPatientMeta">Manage your visits and keep your care details up to date.</p>
+          </div>
+        </div>
+        <div class="account-menu">
+          <button id="accountMenuButton" class="account-menu-button" type="button" aria-expanded="false" aria-controls="accountMenu" aria-label="Open your account menu">
+            <span class="account-avatar" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false"><path d="M12 12a4.25 4.25 0 1 0 0-8.5 4.25 4.25 0 0 0 0 8.5Zm0 2c-4.15 0-7.5 2.22-7.5 4.95V21h15v-2.05C19.5 16.22 16.15 14 12 14Z"/></svg>
+            </span>
+            <span class="account-menu-label">My account</span>
+            <span class="account-menu-chevron" aria-hidden="true"></span>
+          </button>
+          <div id="accountMenu" class="account-menu-popover" hidden>
+            <div class="account-menu-details">
+              <strong id="accountMenuName">Patient</strong>
+              <span id="accountMenuEmail"></span>
+              <span id="accountMenuPhone"></span>
+            </div>
+            <button id="editProfileButton" class="account-menu-action" type="button"><span aria-hidden="true">✎</span> Edit profile</button>
+            <button id="patientLogout" class="account-menu-action signout-action" type="button"><span aria-hidden="true">↗</span> Sign out</button>
+          </div>
+        </div>
       </header>
-      <div class="portal-actions"><a href="contact.html">Book another appointment <span aria-hidden="true">→</span></a></div>
+      <section class="portal-summary" aria-label="Appointment summary">
+        <article class="portal-stat"><small>Upcoming visits</small><strong id="upcomingVisitCount">0</strong></article>
+        <article class="portal-stat"><small>Requests pending</small><strong id="pendingVisitCount">0</strong></article>
+        <article class="portal-stat"><small>Visits completed</small><strong id="completedVisitCount">0</strong></article>
+      </section>
+
+      <div class="portal-content">
+        <section class="appointments-section" aria-labelledby="appointmentsHeading">
+          <div class="appointments-heading">
+            <div><p class="mini-label">YOUR CARE</p><h2 id="appointmentsHeading">Appointments</h2><p>Review your upcoming and past visits.</p></div>
+            <a class="book-appointment-button" href="contact.html">Book an appointment</a>
+          </div>
+          <p id="portalStatus" class="status" role="status" aria-live="polite"></p>
+          <div id="appointmentList" class="appointment-list"></div>
+        </section>
+      </div>
+    </section>
+
+    <dialog id="profileDialog" class="profile-dialog" aria-labelledby="profileDialogTitle">
       <form id="profileForm" class="profile-form">
-        <h2>Update profile</h2>
+        <header class="profile-dialog-header">
+          <div><p class="mini-label">ACCOUNT INFORMATION</p><h2 id="profileDialogTitle">Edit your profile</h2></div>
+          <button id="closeProfileDialog" class="dialog-close-button" type="button" aria-label="Close profile editor">×</button>
+        </header>
+        <p class="profile-intro">Update the contact details associated with your patient account.</p>
         <div class="field">
           <label for="profileName">Full name</label>
-          <input id="profileName" name="name" type="text" autocomplete="name">
+          <input id="profileName" name="name" type="text" autocomplete="name" required>
         </div>
         <div class="field">
-          <label for="profilePhone">Phone</label>
-          <input id="profilePhone" name="phone" type="tel" autocomplete="tel">
+          <label for="profileEmail">Email address</label>
+          <input id="profileEmail" name="email" type="email" autocomplete="email" readonly>
+          <small class="field-help">Your account email cannot be changed here.</small>
         </div>
         <div class="field">
-          <label for="profilePassword">New password</label>
-          <input id="profilePassword" name="password" type="password" minlength="8" placeholder="Leave blank to keep current password">
+          <label for="profilePhone">Phone number</label>
+          <input id="profilePhone" name="phone" type="tel" autocomplete="tel" required>
         </div>
-        <button type="submit">Save profile</button>
         <p id="profileStatus" class="status" role="status" aria-live="polite"></p>
+        <footer class="profile-dialog-actions">
+          <button id="cancelProfileEdit" class="dialog-cancel-button" type="button">Cancel</button>
+          <button class="save-profile-button" type="submit">Save changes</button>
+        </footer>
       </form>
-      <p id="portalStatus" class="status" role="status" aria-live="polite"></p>
-      <div id="appointmentList" class="appointment-list"></div>
-    </section>
+    </dialog>
   </main>
   <script src="js/patient.js"></script>
 </body>

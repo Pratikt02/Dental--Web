@@ -4,108 +4,161 @@
   <meta charset="UTF-8">
   <title>FAQs | Sakthi Dental Clinic</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Answers to common questions about dental pain, scaling, root canal treatment, and routine dental care at Sakthi Dental Clinic.">
   <link rel="stylesheet" href="css/style.css">
   <script src="js/theme.js" defer></script>
 </head>
-<body>
+<body class="faq-page-body">
+  <header class="header">
+    <a href="index.html" class="logo">
+      <img src="clinic/logo.png" alt="Sakthi Dental Clinic Logo">
+      <span>Sakthi Dental Clinic</span>
+    </a>
+    <nav class="nav" aria-label="Main navigation">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="treatments.html">Treatments</a>
+      <a href="faq.html" aria-current="page">FAQs</a>
+      <a href="contact.html" class="nav-btn">Book Appointment</a>
+      <a href="login.html" class="patient-nav-link">Sign In</a>
+    </nav>
+  </header>
 
-  
+  <main class="faq-page">
+    <section class="faq-hero" aria-labelledby="faq-title">
+      <div class="faq-hero-copy">
+        <p class="faq-eyebrow"><span aria-hidden="true"></span> Helpful answers, healthier smiles</p>
+        <h1 id="faq-title">Good questions deserve clear answers.</h1>
+        <p class="faq-subtitle">Explore answers to common dental concerns from our care team. If you need advice for your own smile, we’re here to help.</p>
+        <a class="faq-hero-link" href="contact.html">Talk to our team <span aria-hidden="true">→</span></a>
+      </div>
+      <aside class="faq-hero-note" aria-label="Dental care reminder">
+        <span class="faq-note-icon" aria-hidden="true">?</span>
+        <p class="faq-note-label">A little reassurance</p>
+        <p class="faq-note-copy">Every smile is different. Your dentist can recommend the care that’s right for you.</p>
+        <span class="faq-note-spark" aria-hidden="true">✳</span>
+      </aside>
+    </section>
 
-  <!-- FAQ SECTION -->
-  <section class="faq-section">
-    <h1>Frequently Asked Questions</h1>
-    <p class="faq-subtitle">
-      Clear answers to common dental concerns from our experts.
-    </p>
-
-    <div class="faq-container">
-
-      <div class="faq-item">
-        <button class="faq-question">Can medication completely relieve tooth pain?</button>
-        <div class="faq-answer">
-          <p>
-            Not entirely. Medications may provide temporary relief, but long-term relief requires
-            identifying and treating the root cause through professional dental care.
-          </p>
+    <section class="faq-content" aria-label="Frequently asked dental questions">
+      <div class="faq-content-heading">
+        <div>
+          <p class="faq-section-label">The answers you’re looking for</p>
+          <h2>Common dental questions</h2>
         </div>
+        <span class="faq-count"><strong>07</strong> helpful answers</span>
       </div>
 
-      <div class="faq-item">
-        <button class="faq-question">Does teeth scaling damage enamel or create gaps?</button>
-        <div class="faq-answer">
-          <p>
-            No. Scaling safely removes plaque and tartar without damaging enamel.
-            Temporary sensitivity may occur but usually subsides as gums heal.
-          </p>
-        </div>
-      </div>
+      <div class="faq-container">
+        <article class="faq-item">
+          <button class="faq-question" id="faq-question-1" type="button" aria-expanded="false" aria-controls="faq-answer-1">
+            <span class="faq-number" aria-hidden="true">01</span><span class="faq-question-text">Can medication completely relieve tooth pain?</span>
+            <span class="faq-toggle" aria-hidden="true"></span>
+          </button>
+          <div class="faq-answer" id="faq-answer-1" role="region" aria-labelledby="faq-question-1" aria-hidden="true">
+            <p>Not entirely. Medications may provide temporary relief, but long-term relief requires identifying and treating the root cause through professional dental care.</p>
+          </div>
+        </article>
 
-      <div class="faq-item">
-        <button class="faq-question">Can fluorosis stains be removed through scaling?</button>
-        <div class="faq-answer">
-          <p>
-            Scaling removes only surface stains. Fluorosis is an internal stain and may require
-            bleaching, veneers, or crowns for cosmetic improvement.
-          </p>
-        </div>
-      </div>
+        <article class="faq-item">
+          <button class="faq-question" id="faq-question-2" type="button" aria-expanded="false" aria-controls="faq-answer-2">
+            <span class="faq-number" aria-hidden="true">02</span><span class="faq-question-text">Does teeth scaling damage enamel or create gaps?</span>
+            <span class="faq-toggle" aria-hidden="true"></span>
+          </button>
+          <div class="faq-answer" id="faq-answer-2" role="region" aria-labelledby="faq-question-2" aria-hidden="true">
+            <p>No. Scaling safely removes plaque and tartar without damaging enamel. Temporary sensitivity may occur but usually subsides as gums heal.</p>
+          </div>
+        </article>
 
-      <div class="faq-item">
-        <button class="faq-question">Can painful teeth be treated with fillings?</button>
-        <div class="faq-answer">
-          <p>
-            Not always. If decay reaches the pulp, root canal treatment or extraction may be needed.
-            Fillings work only when damage is limited to enamel or dentin.
-          </p>
-        </div>
-      </div>
+        <article class="faq-item">
+          <button class="faq-question" id="faq-question-3" type="button" aria-expanded="false" aria-controls="faq-answer-3">
+            <span class="faq-number" aria-hidden="true">03</span><span class="faq-question-text">Can fluorosis stains be removed through scaling?</span>
+            <span class="faq-toggle" aria-hidden="true"></span>
+          </button>
+          <div class="faq-answer" id="faq-answer-3" role="region" aria-labelledby="faq-question-3" aria-hidden="true">
+            <p>Scaling removes only surface stains. Fluorosis is an internal stain and may require bleaching, veneers, or crowns for cosmetic improvement.</p>
+          </div>
+        </article>
 
-      <div class="faq-item">
-        <button class="faq-question">Is a crown necessary after root canal treatment?</button>
-        <div class="faq-answer">
-          <p>
-            Yes. A crown protects the weakened tooth, prevents fractures, and restores chewing strength.
-          </p>
-        </div>
-      </div>
+        <article class="faq-item">
+          <button class="faq-question" id="faq-question-4" type="button" aria-expanded="false" aria-controls="faq-answer-4">
+            <span class="faq-number" aria-hidden="true">04</span><span class="faq-question-text">Can painful teeth be treated with fillings?</span>
+            <span class="faq-toggle" aria-hidden="true"></span>
+          </button>
+          <div class="faq-answer" id="faq-answer-4" role="region" aria-labelledby="faq-question-4" aria-hidden="true">
+            <p>Not always. If decay reaches the pulp, root canal treatment or extraction may be needed. Fillings work only when damage is limited to enamel or dentin.</p>
+          </div>
+        </article>
 
-      <div class="faq-item">
-        <button class="faq-question">Can milk teeth require root canal treatment?</button>
-        <div class="faq-answer">
-          <p>
-            Yes. If the milk tooth needs to remain for some time, RCT helps preserve it and prevents infection.
-          </p>
-        </div>
-      </div>
+        <article class="faq-item">
+          <button class="faq-question" id="faq-question-5" type="button" aria-expanded="false" aria-controls="faq-answer-5">
+            <span class="faq-number" aria-hidden="true">05</span><span class="faq-question-text">Is a crown necessary after root canal treatment?</span>
+            <span class="faq-toggle" aria-hidden="true"></span>
+          </button>
+          <div class="faq-answer" id="faq-answer-5" role="region" aria-labelledby="faq-question-5" aria-hidden="true">
+            <p>Yes. A crown protects the weakened tooth, prevents fractures, and restores chewing strength.</p>
+          </div>
+        </article>
 
-      <div class="faq-item">
-        <button class="faq-question">How often should I visit a dentist?</button>
-        <div class="faq-answer">
-          <p>
-            Every six months is recommended for routine check-ups, cleaning, and preventive care.
-          </p>
-        </div>
+        <article class="faq-item">
+          <button class="faq-question" id="faq-question-6" type="button" aria-expanded="false" aria-controls="faq-answer-6">
+            <span class="faq-number" aria-hidden="true">06</span><span class="faq-question-text">Can milk teeth require root canal treatment?</span>
+            <span class="faq-toggle" aria-hidden="true"></span>
+          </button>
+          <div class="faq-answer" id="faq-answer-6" role="region" aria-labelledby="faq-question-6" aria-hidden="true">
+            <p>Yes. If the milk tooth needs to remain for some time, RCT helps preserve it and prevents infection.</p>
+          </div>
+        </article>
+
+        <article class="faq-item">
+          <button class="faq-question" id="faq-question-7" type="button" aria-expanded="false" aria-controls="faq-answer-7">
+            <span class="faq-number" aria-hidden="true">07</span><span class="faq-question-text">How often should I visit a dentist?</span>
+            <span class="faq-toggle" aria-hidden="true"></span>
+          </button>
+          <div class="faq-answer" id="faq-answer-7" role="region" aria-labelledby="faq-question-7" aria-hidden="true">
+            <p>Every six months is recommended for routine check-ups, cleaning, and preventive care.</p>
+          </div>
+        </article>
       </div>
-<!-- BACK BUTTON -->
-  <div class="page-nav">
-    <a href="index.html" class="back-btn">← Back to Home</a>
-  </div>
+    </section>
+
+    <section class="faq-cta" aria-label="Book an appointment">
+      <div>
+        <p class="faq-section-label">Still have a question?</p>
+        <h2>Our team is happy to help you feel at ease.</h2>
+      </div>
+      <a href="contact.html">Book an appointment <span aria-hidden="true">→</span></a>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-box">
+        <h3>Sakthi Dental Clinic</h3>
+        <p>Specialized dental care for women, children &amp; families.</p>
+        <p class="footer-contact">📍 Ahilyanagar, Maharastra<br>📞 +91 9421588976<br>✉️ info@sakthidentalclinic.in</p>
+      </div>
+      <div class="footer-box">
+        <h3>Quick Links</h3>
+        <ul class="footer-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="treatments.html">Treatments</a></li>
+          <li><a href="privacy.html">Privacy Policy</a></li>
+        </ul>
+      </div>
+      <div class="footer-box">
+        <h3>Contact</h3>
+        <ul class="footer-links">
+          <li><a href="tel:+919421588976">Call the clinic</a></li>
+          <li><a href="mailto:info@sakthidentalclinic.in">Send us an email</a></li>
+          <li><a href="contact.html">Book an appointment</a></li>
+        </ul>
+      </div>
     </div>
-  </section>
+    <div class="footer-bottom">© 2026 Sakthi Dental Clinic. All Rights Reserved.</div>
+  </footer>
 
-  <script>
-    const questions = document.querySelectorAll(".faq-question");
-
-    questions.forEach(q => {
-      q.addEventListener("click", () => {
-        q.classList.toggle("active");
-        const answer = q.nextElementSibling;
-        answer.style.maxHeight
-          ? answer.style.maxHeight = null
-          : answer.style.maxHeight = answer.scrollHeight + "px";
-      });
-    });
-  </script>
-
+  <script src="js/main.js"></script>
 </body>
 </html>

@@ -13,17 +13,61 @@ const authLead = document.getElementById("authLead");
 const authTabs = document.querySelector(".auth-tabs");
 const profileForm = document.getElementById("profileForm");
 const profileStatus = document.getElementById("profileStatus");
+const profileDialog = document.getElementById("profileDialog");
+const accountMenuButton = document.getElementById("accountMenuButton");
+const accountMenu = document.getElementById("accountMenu");
 const patientTokenKey = "sakthiDentalPatientSession";
 let patientToken = sessionStorage.getItem(patientTokenKey) || "";
 let authMode = "login";
+let patientProfile = { name: "", email: "", phone: "" };
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
 
-function formatAppointment(item) {
+function formatAppointmentDate(value) {
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return { weekday: "", day: "", month: value };
+  return {
+    weekday: date.toLocaleDateString([], { weekday: "short" }),
+    day: date.toLocaleDateString([], { day: "2-digit" }),
+    month: date.toLocaleDateString([], { month: "short" })
+  };
+}
+
+function formatAppointmentTime(item) {
   const date = new Date(`${item.appointmentDate}T${item.appointmentTime}`);
-  return Number.isNaN(date.getTime()) ? `${item.appointmentDate} at ${item.appointmentTime}` : date.toLocaleString([], { dateStyle: "long", timeStyle: "short" });
+  return Number.isNaN(date.getTime())
+    ? item.appointmentTime
+    : date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+
+function renderProfileIdentity(profile) {
+  patientProfile = {
+    name: String(profile.name || "Patient").trim(),
+    email: String(profile.email || ""),
+    phone: String(profile.phone || "")
+  };
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning," : hour < 17 ? "Good afternoon," : "Good evening,";
+  document.getElementById("greetingTitle").textContent = greeting;
+  document.getElementById("welcomeTitle").textContent = patientProfile.name;
+  document.getElementById("portalPatientMeta").textContent = [patientProfile.email, patientProfile.phone]
+    .filter(Boolean).join("  ·  ") || "Manage your visits and keep your care details up to date.";
+  document.getElementById("accountMenuName").textContent = patientProfile.name;
+  document.getElementById("accountMenuEmail").textContent = patientProfile.email;
+  document.getElementById("accountMenuPhone").textContent = patientProfile.phone;
+  accountMenuButton.setAttribute("aria-label", `Open account options for ${patientProfile.name}`);
+}
+
+function renderAppointmentSummary(items) {
+  const today = new Date();
+  const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  document.getElementById("upcomingVisitCount").textContent = items.filter(item =>
+    item.appointmentDate >= todayString && !["cancelled", "completed"].includes(item.status)
+  ).length;
+  document.getElementById("pendingVisitCount").textContent = items.filter(item => item.status === "pending").length;
+  document.getElementById("completedVisitCount").textContent = items.filter(item => item.status === "completed").length;
 }
 
 function showMode(mode) {
@@ -65,12 +109,22 @@ async function loadAppointments() {
     const response = await fetch("/api/my-appointments", { headers: { Authorization: `Bearer ${patientToken}` } });
     const result = await response.json();
     if (!response.ok) throw new Error(result.errors?.join(" ") || "Unable to load appointments.");
-    appointmentList.innerHTML = result.appointments.length ? result.appointments.map(item => `
+    renderAppointmentSummary(result.appointments);
+    appointmentList.innerHTML = result.appointments.length ? result.appointments.map(item => {
+      const date = formatAppointmentDate(item.appointmentDate);
+      return `
       <article class="appointment-card">
-        <div><span class="appointment-label">${escapeHtml(item.treatment)}</span><h2>${escapeHtml(formatAppointment(item))}</h2><p>${escapeHtml(item.doctor ? `Dentist: ${item.doctor}` : "Dentist to be assigned")}</p><p>${escapeHtml(item.message || "No additional information")}</p></div>
+        <div class="appointment-date"><span>${escapeHtml(date.weekday)}</span><strong>${escapeHtml(date.day)}</strong><span>${escapeHtml(date.month)}</span></div>
+        <div class="appointment-details">
+          <span class="appointment-label">${escapeHtml(item.treatment)}</span>
+          <h3>${escapeHtml(formatAppointmentTime(item))}</h3>
+          <p class="appointment-doctor">${escapeHtml(item.doctor ? item.doctor : "Dentist to be assigned")}</p>
+          ${item.message ? `<p class="appointment-note">${escapeHtml(item.message)}</p>` : ""}
+        </div>
         <div class="appointment-meta"><span class="appointment-status ${escapeHtml(item.status)}">${escapeHtml(item.status)}</span>${item.status === "pending" ? `<button class="cancel-button" data-id="${escapeHtml(item._id)}" type="button">Cancel request</button>` : ""}</div>
       </article>
-    `).join("") : '<p class="empty-state">You have no appointment requests yet.</p>';
+    `;
+    }).join("") : '<div class="empty-state"><h3>No appointments yet</h3><p>Your booked visits will appear here. Ready to schedule your next check-up?</p><a href="contact.html">Book an appointment</a></div>';
     portalStatus.textContent = "";
   } catch (error) {
     portalStatus.textContent = error.message;
@@ -85,7 +139,9 @@ async function loadProfile() {
     const result = await response.json();
     if (!response.ok) throw new Error(result.errors?.join(" ") || "Unable to load profile.");
     document.getElementById("profileName").value = result.user?.name || "";
+    document.getElementById("profileEmail").value = result.user?.email || "";
     document.getElementById("profilePhone").value = result.user?.phone || "";
+    renderProfileIdentity(result.user || {});
   } catch (error) {
     portalStatus.textContent = error.message;
     portalStatus.className = "status error";
@@ -95,7 +151,7 @@ async function loadProfile() {
 function showPortal(name) {
   authView.hidden = true;
   portalView.hidden = false;
-  document.getElementById("welcomeTitle").textContent = `${name ? `Welcome, ${name}` : "Your appointments"}`;
+  if (name && !patientProfile.name) renderProfileIdentity({ name });
   loadProfile();
   loadAppointments();
 }
@@ -177,9 +233,48 @@ resetPasswordForm.addEventListener("submit", async event => {
 });
 
 document.querySelectorAll(".auth-tab").forEach(tab => tab.addEventListener("click", () => showMode(tab.dataset.mode)));
+
+accountMenuButton.addEventListener("click", () => {
+  const isOpen = !accountMenu.hidden;
+  accountMenu.hidden = isOpen;
+  accountMenuButton.setAttribute("aria-expanded", String(!isOpen));
+});
+
+document.getElementById("editProfileButton").addEventListener("click", () => {
+  accountMenu.hidden = true;
+  accountMenuButton.setAttribute("aria-expanded", "false");
+  profileStatus.textContent = "";
+  profileStatus.className = "status";
+  document.getElementById("profileName").value = patientProfile.name;
+  document.getElementById("profileEmail").value = patientProfile.email;
+  document.getElementById("profilePhone").value = patientProfile.phone;
+  profileDialog.showModal();
+  document.getElementById("profileName").focus();
+});
+
+function closeProfileDialog() {
+  profileDialog.close();
+}
+
+document.getElementById("closeProfileDialog").addEventListener("click", closeProfileDialog);
+document.getElementById("cancelProfileEdit").addEventListener("click", closeProfileDialog);
+profileDialog.addEventListener("click", event => {
+  if (event.target === profileDialog) closeProfileDialog();
+});
+document.addEventListener("click", event => {
+  if (!accountMenu.hidden && !event.target.closest(".account-menu")) {
+    accountMenu.hidden = true;
+    accountMenuButton.setAttribute("aria-expanded", "false");
+  }
+});
+
 document.getElementById("patientLogout").addEventListener("click", () => {
   sessionStorage.removeItem(patientTokenKey);
   patientToken = "";
+  patientProfile = { name: "", email: "", phone: "" };
+  accountMenu.hidden = true;
+  accountMenuButton.setAttribute("aria-expanded", "false");
+  if (profileDialog.open) profileDialog.close();
   portalView.hidden = true;
   authView.hidden = false;
   authForm.reset();
@@ -199,7 +294,11 @@ profileForm.addEventListener("submit", async event => {
     if (!response.ok) throw new Error(result.errors?.join(" ") || "Unable to update profile.");
     profileStatus.textContent = result.message;
     profileStatus.className = "status success";
-    showPortal(document.getElementById("profileName").value || "Your account");
+    renderProfileIdentity({
+      name: document.getElementById("profileName").value,
+      email: document.getElementById("profileEmail").value,
+      phone: document.getElementById("profilePhone").value
+    });
   } catch (error) {
     profileStatus.textContent = error.message;
     profileStatus.className = "status error";
