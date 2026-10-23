@@ -73,24 +73,22 @@
           <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
         </div>
 
-        <div class="form-grid">
-          <div class="form-field">
-            <label for="appointmentDate">Preferred date</label>
-            <input id="appointmentDate" name="appointmentDate" type="date" required>
-          </div>
-          <div class="form-field">
-            <label for="doctor">Preferred dentist</label>
-            <select id="doctor" name="doctor">
-              <option value="">Any available dentist</option>
-            </select>
-          </div>
+        <div class="form-field">
+          <label for="appointmentDate">Preferred date</label>
+          <input id="appointmentDate" name="appointmentDate" type="date" required>
         </div>
 
         <div class="form-field">
           <label for="appointmentTime">Preferred time</label>
           <select id="appointmentTime" name="appointmentTime" required>
-            <option value="">Choose a date and dentist first</option>
+            <option value="">Choose a date first</option>
           </select>
+        </div>
+
+        <div class="form-field">
+          <label for="doctor">Preferred dentist</label>
+          <input id="doctor" name="doctor" type="text" placeholder="Automatically assigned after choosing a time" readonly>
+          <small class="form-hint">Your dentist is assigned based on the selected time and that day's schedule.</small>
         </div>
 
         <div class="form-field">

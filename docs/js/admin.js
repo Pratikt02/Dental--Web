@@ -8,10 +8,14 @@ const searchInput = document.getElementById("searchInput");
 const exportButton = document.getElementById("exportButton");
 const scheduleForm = document.getElementById("scheduleForm");
 const scheduleList = document.getElementById("scheduleList");
+const scheduleShift = document.getElementById("scheduleShift");
+const scheduleSubmitButton = document.getElementById("scheduleSubmitButton");
+const cancelScheduleEditButton = document.getElementById("cancelScheduleEdit");
 const tokenStorageKey = "sakthiDentalAdminSession";
 let appointments = [];
 let schedules = [];
 let adminToken = sessionStorage.getItem(tokenStorageKey) || "";
+let editingScheduleId = "";
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -31,9 +35,27 @@ function formatDate(date, time) {
 function renderSummary() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const todayKey = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, "0"),
+    String(today.getDate()).padStart(2, "0")
+  ].join("-");
+  const monthKey = todayKey.slice(0, 7);
+  const activeAppointments = appointments.filter(item => item.status !== "cancelled");
+  const todayAppointments = activeAppointments.filter(item => item.appointmentDate === todayKey);
+  const monthAppointments = activeAppointments.filter(item => item.appointmentDate?.startsWith(monthKey));
+  const completedMonthAppointments = appointments.filter(item =>
+    item.status === "completed" && item.appointmentDate?.startsWith(monthKey)
+  );
+
   document.getElementById("totalCount").textContent = appointments.length;
   document.getElementById("pendingCount").textContent = appointments.filter(item => item.status === "pending").length;
   document.getElementById("upcomingCount").textContent = appointments.filter(item => new Date(`${item.appointmentDate}T${item.appointmentTime}`) >= today).length;
+  document.getElementById("todayAppointmentsCount").textContent = todayAppointments.length;
+  document.getElementById("monthAppointmentsCount").textContent = monthAppointments.length;
+  document.getElementById("completedMonthAppointmentsCount").textContent = completedMonthAppointments.length;
+  document.getElementById("monthAppointmentsLabel").textContent =
+    `Appointments in ${today.toLocaleString([], { month: "long" })}`;
 
   const counts = [
     { label: "Pending", value: appointments.filter(item => item.status === "pending").length, color: "#f59e0b" },
@@ -58,10 +80,32 @@ function renderScheduleList() {
   }
   scheduleList.innerHTML = schedules.map(item => `
     <div class="schedule-item">
-      <strong>${escapeHtml(item.doctor)}</strong>
-      <span>${escapeHtml(item.day)} · ${escapeHtml(item.startTime)} - ${escapeHtml(item.endTime)}</span>
+      <div class="schedule-item-info">
+        <strong>${escapeHtml(item.doctor)}</strong>
+        <span>${escapeHtml(item.day)} · ${escapeHtml(item.startTime)} - ${escapeHtml(item.endTime)}</span>
+      </div>
+      <div class="schedule-item-actions">
+        <button class="schedule-action-button" type="button" data-action="edit" data-id="${escapeHtml(item._id)}" aria-label="Edit ${escapeHtml(item.doctor)} schedule for ${escapeHtml(item.day)}" title="Edit schedule">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"></path></svg>
+        </button>
+        <button class="schedule-action-button delete" type="button" data-action="delete" data-id="${escapeHtml(item._id)}" aria-label="Delete ${escapeHtml(item.doctor)} schedule for ${escapeHtml(item.day)}" title="Delete schedule">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="m19 6-1 14H6L5 6"></path><path d="M10 11v5M14 11v5"></path></svg>
+        </button>
+      </div>
     </div>
   `).join("");
+}
+
+function resetScheduleForm() {
+  scheduleForm.reset();
+  editingScheduleId = "";
+  scheduleSubmitButton.textContent = "Save schedule";
+  cancelScheduleEditButton.hidden = true;
+}
+
+function showScheduleFormError(error) {
+  dashboardStatus.textContent = error.message;
+  dashboardStatus.className = "status error";
 }
 
 async function loadSchedules() {
@@ -91,26 +135,30 @@ function renderAppointments() {
 
   appointmentsBody.innerHTML = filtered.map(item => `
     <tr>
-      <td>
+      <td data-label="Patient">
         <strong>${escapeHtml(item.name)}</strong>
         <small>${escapeHtml(item.message || "No additional message")}</small>
-        <small>Doctor: ${escapeHtml(item.doctor || "Unassigned")}</small>
       </td>
-      <td>${escapeHtml(formatDate(item.appointmentDate, item.appointmentTime))}</td>
-      <td>${escapeHtml(item.treatment)}<br><small>Price: ${escapeHtml(String(item.price || 0))}</small></td>
-      <td><a href="mailto:${escapeHtml(item.email)}">${escapeHtml(item.email)}</a><small>${escapeHtml(item.phone)}</small></td>
-      <td>
+      <td data-label="Appointment">${escapeHtml(formatDate(item.appointmentDate, item.appointmentTime))}</td>
+      <td data-label="Treatment">${escapeHtml(item.treatment)}<br><small>Price: ${escapeHtml(String(item.price || 0))}</small></td>
+      <td data-label="Contact"><a href="mailto:${escapeHtml(item.email)}">${escapeHtml(item.email)}</a><small>${escapeHtml(item.phone)}</small></td>
+      <td data-label="Status & notes">
         <select class="status-select ${escapeHtml(item.status)}" data-id="${escapeHtml(item._id)}" aria-label="Update status for ${escapeHtml(item.name)}">
           ${["pending", "confirmed", "completed", "cancelled"].map(status => `<option ${item.status === status ? "selected" : ""}>${status}</option>`).join("")}
         </select>
-        <textarea class="notes-input" data-id="${escapeHtml(item._id)}" placeholder="Admin notes">${escapeHtml(item.adminNotes || "")}</textarea>
-        <select class="doctor-input" data-id="${escapeHtml(item._id)}" aria-label="Assign doctor to ${escapeHtml(item.name)}">
-          <option value="">Unassigned</option>
-          ${[...new Set([...schedules.map(schedule => schedule.doctor), item.doctor].filter(Boolean))].sort().map(doctor =>
-            `<option value="${escapeHtml(doctor)}" ${item.doctor === doctor ? "selected" : ""}>${escapeHtml(doctor)}</option>`
-          ).join("")}
-        </select>
-        <button class="delete-appointment-button" data-id="${escapeHtml(item._id)}" type="button">Delete appointment</button>
+        <label class="appointment-notes">
+          <span class="appointment-notes-label">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8l4 4v12H4V4h4Z"></path><path d="M8 4v5h8V4M8 14h8M8 17h5"></path></svg>
+            Internal note
+          </span>
+          <textarea class="notes-input" data-id="${escapeHtml(item._id)}" aria-label="Internal note for ${escapeHtml(item.name)}" placeholder="Add a note for your team...">${escapeHtml(item.adminNotes || "")}</textarea>
+        </label>
+        <span class="assigned-doctor-badge" aria-label="Assigned dentist: ${escapeHtml(item.doctor || "Unassigned")}" title="Assigned dentist">
+          ${escapeHtml(item.doctor || "Unassigned")}
+        </span>
+        <button class="delete-appointment-button" data-id="${escapeHtml(item._id)}" type="button" aria-label="Delete appointment for ${escapeHtml(item.name)}" title="Delete appointment">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="m19 6-1 14H6L5 6"></path><path d="M10 11v5M14 11v5"></path></svg>
+        </button>
       </td>
     </tr>
   `).join("");
@@ -209,21 +257,74 @@ exportButton.addEventListener("click", async () => {
 scheduleForm.addEventListener("submit", async event => {
   event.preventDefault();
   const payload = Object.fromEntries(new FormData(scheduleForm));
+  if (!scheduleShift.value) {
+    dashboardStatus.textContent = "Select a doctor shift.";
+    dashboardStatus.className = "status error";
+    return;
+  }
+  const [startTime, endTime] = scheduleShift.value.split("|");
+  payload.startTime = startTime;
+  payload.endTime = endTime;
   try {
-    const response = await fetch("/api/schedules", {
-      method: "POST",
+    const response = await fetch(editingScheduleId ? `/api/schedules/${editingScheduleId}` : "/api/schedules", {
+      method: editingScheduleId ? "PUT" : "POST",
       headers: { Authorization: `Bearer ${adminToken}`, "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.errors?.join(" ") || "Unable to save schedule.");
-    scheduleForm.reset();
+    resetScheduleForm();
     dashboardStatus.textContent = result.message;
     dashboardStatus.className = "status success";
-    loadSchedules();
+    await loadSchedules();
   } catch (error) {
-    dashboardStatus.textContent = error.message;
-    dashboardStatus.className = "status error";
+    showScheduleFormError(error);
+  }
+});
+
+cancelScheduleEditButton.addEventListener("click", resetScheduleForm);
+
+scheduleList.addEventListener("click", async event => {
+  const button = event.target.closest("button[data-action]");
+  if (!button || button.disabled) return;
+
+  const schedule = schedules.find(item => item._id === button.dataset.id);
+  if (!schedule) return;
+
+  if (button.dataset.action === "edit") {
+    scheduleForm.elements.doctor.value = schedule.doctor;
+    scheduleForm.elements.day.value = schedule.day;
+    scheduleShift.value = `${schedule.startTime}|${schedule.endTime}`;
+    if (!scheduleShift.value) {
+      showScheduleFormError(new Error("This schedule uses a shift that is no longer available in the shift options."));
+      return;
+    }
+    editingScheduleId = schedule._id;
+    scheduleSubmitButton.textContent = "Update schedule";
+    cancelScheduleEditButton.hidden = false;
+    scheduleForm.scrollIntoView({ behavior: "smooth", block: "center" });
+    scheduleForm.elements.doctor.focus();
+    return;
+  }
+
+  if (button.dataset.action !== "delete" ||
+      !window.confirm("Delete schedule for " + schedule.doctor + " on " + schedule.day + "?")) return;
+
+  button.disabled = true;
+  try {
+    const response = await fetch(`/api/schedules/${schedule._id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${adminToken}` }
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.errors?.join(" ") || result.message || "Unable to delete schedule.");
+    if (editingScheduleId === schedule._id) resetScheduleForm();
+    dashboardStatus.textContent = result.message;
+    dashboardStatus.className = "status success";
+    await loadSchedules();
+  } catch (error) {
+    showScheduleFormError(error);
+    button.disabled = false;
   }
 });
 

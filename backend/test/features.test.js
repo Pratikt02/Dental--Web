@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { getTreatmentPricing, buildAppointmentEmail, buildReminderSms, normalizeAppointmentTime, isClinicTimeAvailable, getAppointmentTimeSlots, buildPasswordResetOtpEmail } = require('../features');
+const { getTreatmentPricing, buildAppointmentEmail, buildReminderSms, normalizeAppointmentTime, isClinicTimeAvailable, getAppointmentTimeSlots, getAvailableDoctorsByTime, getAvailableAppointmentTimes, buildPasswordResetOtpEmail } = require('../features');
 
 test('treatment pricing returns a positive value for known treatment', () => {
   assert.ok(getTreatmentPricing('Teeth Cleaning / Scaling') > 0);
@@ -41,6 +41,63 @@ test('doctor schedule slots include valid half-hour times within the shift', () 
   assert.deepEqual(getAppointmentTimeSlots('10:00', '11:00'), ['10:00', '10:30', '11:00']);
   assert.deepEqual(getAppointmentTimeSlots('08:30', '10:00'), []);
   assert.deepEqual(getAppointmentTimeSlots('11:00', '10:00'), []);
+});
+
+test('a time stays available for another scheduled doctor when one doctor is booked', () => {
+  const schedules = [
+    { doctor: 'Dr. A', startTime: '10:00', endTime: '11:00' },
+    { doctor: 'Dr. B', startTime: '10:00', endTime: '10:30' }
+  ];
+  const bookedAppointments = [{ doctor: 'Dr. A', appointmentTime: '10:00' }];
+
+  assert.deepEqual(
+    getAvailableAppointmentTimes(schedules, bookedAppointments),
+    ['10:00', '10:30', '11:00']
+  );
+});
+
+test('a time is unavailable when all scheduled doctors are booked for that slot', () => {
+  const schedules = [
+    { doctor: 'Dr. A', startTime: '10:00', endTime: '11:00' },
+    { doctor: 'Dr. B', startTime: '10:00', endTime: '10:30' }
+  ];
+  const bookedAppointments = [
+    { doctor: 'Dr. A', appointmentTime: '10:00' },
+    { doctor: 'Dr. B', appointmentTime: '10:00' }
+  ];
+
+  assert.deepEqual(
+    getAvailableAppointmentTimes(schedules, bookedAppointments),
+    ['10:30', '11:00']
+  );
+});
+
+test('a selected dentist slot becomes unavailable when that dentist is booked', () => {
+  const schedules = [{ doctor: 'Dr. A', startTime: '10:00', endTime: '10:30' }];
+  const bookedAppointments = [{ doctor: 'Dr. A', appointmentTime: '10:00' }];
+
+  assert.deepEqual(
+    getAvailableAppointmentTimes(schedules, bookedAppointments),
+    ['10:30']
+  );
+});
+
+test('available dentists are assigned by the selected time and exclude booked doctors', () => {
+  const schedules = [
+    { doctor: 'Dr. A', startTime: '09:00', endTime: '10:00' },
+    { doctor: 'Dr. B', startTime: '09:30', endTime: '10:30' }
+  ];
+  const bookedAppointments = [{ doctor: 'Dr. A', appointmentTime: '09:30' }];
+
+  assert.deepEqual(
+    getAvailableDoctorsByTime(schedules, bookedAppointments),
+    {
+      '09:00': ['Dr. A'],
+      '09:30': ['Dr. B'],
+      '10:00': ['Dr. A', 'Dr. B'],
+      '10:30': ['Dr. B']
+    }
+  );
 });
 
 test('password reset OTP email includes the code and expiry instructions', () => {

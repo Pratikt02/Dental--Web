@@ -92,6 +92,36 @@ function getAppointmentTimeSlots(startTime, endTime) {
     .map(option => option.value);
 }
 
+function getAvailableDoctorsByTime(schedules, bookedAppointments) {
+  const doctorsByTime = new Map();
+
+  for (const schedule of schedules) {
+    for (const time of getAppointmentTimeSlots(schedule.startTime, schedule.endTime)) {
+      const doctors = doctorsByTime.get(time) || new Set();
+      doctors.add(schedule.doctor);
+      doctorsByTime.set(time, doctors);
+    }
+  }
+
+  const bookedDoctorsByTime = new Map();
+  for (const appointment of bookedAppointments) {
+    const doctors = bookedDoctorsByTime.get(appointment.appointmentTime) || new Set();
+    doctors.add(appointment.doctor);
+    bookedDoctorsByTime.set(appointment.appointmentTime, doctors);
+  }
+
+  return Object.fromEntries([...doctorsByTime.entries()]
+    .map(([time, doctors]) => {
+      const bookedDoctors = bookedDoctorsByTime.get(time) || new Set();
+      return [time, [...doctors].filter(doctor => !bookedDoctors.has(doctor)).sort()];
+    })
+    .filter(([, availableDoctors]) => availableDoctors.length));
+}
+
+function getAvailableAppointmentTimes(schedules, bookedAppointments) {
+  return Object.keys(getAvailableDoctorsByTime(schedules, bookedAppointments)).sort();
+}
+
 const CLINIC_NAME = "Dental Pro";
 
 function buildAppointmentEmail({ name, treatment, date, time, price, doctor, status = "pending" }) {
@@ -133,6 +163,8 @@ module.exports = {
   isClinicTimeAvailable,
   buildAppointmentTimeOptions,
   getAppointmentTimeSlots,
+  getAvailableDoctorsByTime,
+  getAvailableAppointmentTimes,
   buildAppointmentEmail,
   buildReminderSms,
   buildAppointmentStatusMessage,

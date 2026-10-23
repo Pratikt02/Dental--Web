@@ -98,6 +98,12 @@ const appointmentDateInput = document.getElementById("appointmentDate");
 const appointmentTimeInput = document.getElementById("appointmentTime");
 const doctorInput = document.getElementById("doctor");
 let availableTimes = [];
+let scheduledTimes = [];
+let bookedTimes = [];
+let availableDoctorsByTime = {};
+let availabilityRequestId = 0;
+let availabilityLoading = false;
+let availabilityError = false;
 
 function formatTimeLabel(value) {
   const [hourText, minute] = value.split(":");
@@ -107,45 +113,95 @@ function formatTimeLabel(value) {
 }
 
 function renderAvailableTimes() {
-  appointmentTimeInput.innerHTML = '<option value="">Choose an available time</option>' + availableTimes
-    .map(time => `<option value="${time}">${formatTimeLabel(time)}</option>`)
-    .join("");
-  appointmentTimeInput.disabled = availableTimes.length === 0;
-  if (!availableTimes.length) {
-    appointmentTimeInput.innerHTML = '<option value="">No times available for this date and dentist</option>';
+  const selectedTime = appointmentTimeInput.value;
+  appointmentTimeInput.replaceChildren();
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = availableTimes.length
+    ? "Choose an available time"
+    : scheduledTimes.length
+      ? "No available times — booked slots shown below"
+      : availabilityLoading
+        ? "Loading available times…"
+        : availabilityError
+          ? "Unable to load appointment times"
+          : appointmentDateInput?.value
+            ? "No dentists scheduled for this day"
+            : "Choose a date first";
+  appointmentTimeInput.append(placeholder);
+
+  for (const time of scheduledTimes) {
+    const option = document.createElement("option");
+    option.value = time;
+    option.textContent = bookedTimes.includes(time)
+      ? `${formatTimeLabel(time)} — Not available`
+      : formatTimeLabel(time);
+    option.disabled = bookedTimes.includes(time);
+    appointmentTimeInput.append(option);
   }
+
+  appointmentTimeInput.disabled = scheduledTimes.length === 0;
+  if (availableTimes.includes(selectedTime)) {
+    appointmentTimeInput.value = selectedTime;
+  } else {
+    appointmentTimeInput.value = "";
+  }
+  updatePreferredDentist();
 }
 
-async function loadDoctors() {
-  if (!doctorInput) return;
-  try {
-    const response = await fetch("/api/doctors");
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.errors?.join(" ") || "Unable to load dentists.");
-    doctorInput.innerHTML = '<option value="">Any available dentist</option>' + result.doctors
-      .map(doctor => `<option value="${doctor.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")}">${doctor.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")}</option>`)
-      .join("");
-  } catch (error) {
-    const status = document.getElementById("appointmentStatus");
-    status.textContent = error.message;
-    status.className = "form-status error";
-  }
+function updatePreferredDentist() {
+  const selectedTime = appointmentTimeInput.value;
+  const availableDoctors = availableDoctorsByTime[selectedTime] || [];
+  doctorInput.value = availableDoctors[0] || "";
+  doctorInput.placeholder = selectedTime && !availableDoctors.length
+    ? "No dentist available for this time"
+    : "Automatically assigned after choosing a time";
 }
 
 async function loadAvailability() {
-  availableTimes = [];
-  renderAvailableTimes();
-  if (!appointmentDateInput?.value) return;
+  const requestId = ++availabilityRequestId;
+  if (!appointmentDateInput?.value) {
+    availableTimes = [];
+    scheduledTimes = [];
+    bookedTimes = [];
+    availableDoctorsByTime = {};
+    availabilityLoading = false;
+    availabilityError = false;
+    renderAvailableTimes();
+    return;
+  }
 
+  availabilityLoading = true;
+  availabilityError = false;
+  renderAvailableTimes();
   const params = new URLSearchParams({ date: appointmentDateInput.value });
-  if (doctorInput?.value) params.set("doctor", doctorInput.value);
   try {
     const response = await fetch(`/api/availability?${params}`);
+    if (!response.headers.get("content-type")?.includes("application/json")) {
+      throw new Error("Could not load times. Open booking through the clinic website and try again.");
+    }
     const result = await response.json();
     if (!response.ok) throw new Error(result.errors?.join(" ") || "Unable to load available times.");
+    if (requestId !== availabilityRequestId) return;
+    availabilityLoading = false;
+    availabilityError = false;
+    scheduledTimes = result.scheduledTimes || result.availableTimes || [];
+    bookedTimes = result.bookedTimes || [];
     availableTimes = result.availableTimes || [];
+    availableDoctorsByTime = result.availableDoctorsByTime || {};
     renderAvailableTimes();
+    const status = document.getElementById("appointmentStatus");
+    status.textContent = "";
+    status.className = "form-status";
   } catch (error) {
+    if (requestId !== availabilityRequestId) return;
+    availabilityLoading = false;
+    availabilityError = true;
+    availableTimes = [];
+    scheduledTimes = [];
+    bookedTimes = [];
+    availableDoctorsByTime = {};
+    renderAvailableTimes();
     const status = document.getElementById("appointmentStatus");
     status.textContent = error.message;
     status.className = "form-status error";
@@ -162,11 +218,33 @@ if (appointmentDateInput) {
   appointmentDateInput.max = new Date(maxDate.getTime() - maxDate.getTimezoneOffset() * 60000)
     .toISOString()
     .split("T")[0];
-  appointmentDateInput.addEventListener("change", loadAvailability);
+  appointmentDateInput.addEventListener("change", async () => {
+    availableTimes = [];
+    scheduledTimes = [];
+    bookedTimes = [];
+    availableDoctorsByTime = {};
+    availabilityError = false;
+    doctorInput.value = "";
+    availabilityLoading = true;
+    renderAvailableTimes();
+    const status = document.getElementById("appointmentStatus");
+    status.textContent = "";
+    status.className = "form-status";
+    await loadAvailability();
+  });
+  window.addEventListener("focus", () => {
+    if (appointmentDateInput.value) loadAvailability();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && appointmentDateInput.value) loadAvailability();
+  });
+  window.setInterval(() => {
+    if (appointmentDateInput.value && !document.hidden) loadAvailability();
+  }, 30000);
 }
 
-doctorInput?.addEventListener("change", loadAvailability);
-loadDoctors();
+appointmentTimeInput?.addEventListener("change", updatePreferredDentist);
+if (appointmentDateInput) loadAvailability();
 
 document.getElementById("appointmentForm")?.addEventListener("submit", async function (event) {
   event.preventDefault();
@@ -212,12 +290,19 @@ document.getElementById("appointmentForm")?.addEventListener("submit", async fun
     const result = await response.json();
 
     if (!response.ok) {
-      throw new Error(result.errors?.join(" ") || "Unable to submit the request.");
+      const errorMessage = result.errors?.join(" ") || "Unable to submit the request.";
+      if (response.status === 409) await loadAvailability();
+      throw new Error(errorMessage);
     }
 
     status.textContent = result.message;
     status.className = "form-status success";
     form.reset();
+    availableTimes = [];
+    scheduledTimes = [];
+    bookedTimes = [];
+    availableDoctorsByTime = {};
+    renderAvailableTimes();
   } catch (error) {
     status.textContent = error.message || "Unable to submit the request. Please call the clinic.";
     status.className = "form-status error";

@@ -39,10 +39,39 @@
       </div>
 
       <div class="dashboard-layout">
-        <section class="chart-panel" aria-labelledby="chartTitle">
-          <h2 id="chartTitle">Status overview</h2>
-          <div id="chartContainer" class="chart-container"></div>
-        </section>
+        <div class="overview-column">
+          <section class="chart-panel" aria-labelledby="chartTitle">
+            <h2 id="chartTitle">Status overview</h2>
+            <div id="chartContainer" class="chart-container"></div>
+          </section>
+
+          <section class="period-metrics" aria-label="Appointment totals by period">
+            <article class="period-metric-card">
+              <span class="period-metric-icon today" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18"></path></svg></span>
+              <div>
+                <p>Appointments today</p>
+                <strong id="todayAppointmentsCount">0</strong>
+                <small>Scheduled for today</small>
+              </div>
+            </article>
+            <article class="period-metric-card">
+              <span class="period-metric-icon month" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01"></path></svg></span>
+              <div>
+                <p id="monthAppointmentsLabel">Appointments this month</p>
+                <strong id="monthAppointmentsCount">0</strong>
+                <small>Scheduled this month</small>
+              </div>
+            </article>
+            <article class="period-metric-card">
+              <span class="period-metric-icon completed" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"></path><circle cx="12" cy="12" r="9"></circle></svg></span>
+              <div>
+                <p>Completed this month</p>
+                <strong id="completedMonthAppointmentsCount">0</strong>
+                <small>Visits marked completed</small>
+              </div>
+            </article>
+          </section>
+        </div>
 
         <section class="schedule-panel" aria-labelledby="scheduleTitle">
           <div class="schedule-header">
@@ -75,19 +104,21 @@
               </label>
             </div>
 
-            <div class="time-row">
-              <label class="field-block">
-                <span>Start time</span>
-                <input id="scheduleStart" name="startTime" type="time" required>
-              </label>
+            <label class="field-block">
+              <span>Doctor shift</span>
+              <select id="scheduleShift" required>
+                <option value="">Select a shift</option>
+                <option value="09:00|19:00">Full day · 9:00 AM to 7:00 PM</option>
+                <option value="09:00|13:00">Morning · 9:00 AM to 1:00 PM</option>
+                <option value="09:00|14:00">Morning · 9:00 AM to 2:00 PM</option>
+                <option value="14:00|19:00">Afternoon · 2:00 PM to 7:00 PM</option>
+              </select>
+            </label>
 
-              <label class="field-block">
-                <span>End time</span>
-                <input id="scheduleEnd" name="endTime" type="time" required>
-              </label>
+            <div class="schedule-form-actions">
+              <button id="scheduleSubmitButton" type="submit" class="button-secondary">Save schedule</button>
+              <button id="cancelScheduleEdit" type="button" class="button-secondary" hidden>Cancel edit</button>
             </div>
-
-            <button type="submit" class="button-secondary">Save schedule</button>
           </form>
 
           <div class="schedule-summary">
@@ -103,17 +134,24 @@
 
       <section class="appointments-panel" aria-labelledby="appointmentsTitle">
         <div class="panel-toolbar">
-          <div>
-            <h2 id="appointmentsTitle">Appointment Requests</h2>
-            <p id="lastUpdated">Not loaded yet</p>
+          <div class="appointments-heading">
+            <span class="appointments-heading-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M8 3v3m8-3v3M4 9h16"></path><rect x="4" y="5" width="16" height="16" rx="2"></rect><path d="m9 14 2 2 4-4"></path></svg>
+            </span>
+            <div>
+              <p class="appointments-eyebrow">Clinic workspace</p>
+              <h2 id="appointmentsTitle">Appointment Requests</h2>
+              <p id="lastUpdated">Not loaded yet</p>
+            </div>
           </div>
           <div class="toolbar-actions">
             <label class="search-box">
               <span class="sr-only">Search appointments</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 4 4"></path></svg>
               <input id="searchInput" type="search" placeholder="Search patient or treatment">
             </label>
-            <button id="exportButton" class="button-secondary" type="button">Export CSV</button>
-            <button id="refreshButton" class="button-secondary" type="button">Refresh</button>
+            <button id="exportButton" class="button-secondary" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v3h14v-3"></path></svg><span>Export CSV</span></button>
+            <button id="refreshButton" class="button-secondary" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"></path><path d="M5.6 9a7 7 0 0 1 11.7-2L20 12M4 12l2.7 5a7 7 0 0 0 11.7-2"></path></svg><span>Refresh</span></button>
           </div>
         </div>
 
@@ -122,11 +160,11 @@
           <table>
             <thead>
               <tr>
-                <th>Patient</th>
-                <th>Appointment</th>
-                <th>Treatment</th>
-                <th>Contact</th>
-                <th>Status</th>
+                <th scope="col">Patient</th>
+                <th scope="col">Appointment</th>
+                <th scope="col">Treatment</th>
+                <th scope="col">Contact</th>
+                <th scope="col">Status &amp; notes</th>
               </tr>
             </thead>
             <tbody id="appointmentsBody"></tbody>

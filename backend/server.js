@@ -12,6 +12,7 @@ const {
   isClinicTimeAvailable,
   buildAppointmentTimeOptions,
   getAppointmentTimeSlots,
+  getAvailableDoctorsByTime,
   buildAppointmentEmail,
   buildReminderSms,
   buildAppointmentStatusMessage,
@@ -495,10 +496,13 @@ async function handleApi(request, response, url) {
       const booked = await appointments.find({ appointmentDate: date, status: { $nin: ["cancelled"] } })
         .project({ appointmentTime: 1, _id: 0 }).toArray();
       const bookedTimes = [...new Set(booked.map(item => item.appointmentTime))];
+      const scheduledTimes = buildAppointmentTimeOptions().map(option => option.value);
       sendJson(response, 200, {
         success: true,
+        scheduledTimes,
         bookedTimes,
-        availableTimes: buildAppointmentTimeOptions().map(option => option.value).filter(time => !bookedTimes.includes(time))
+        availableTimes: scheduledTimes.filter(time => !bookedTimes.includes(time)),
+        availableDoctorsByTime: {}
       });
       return;
     }
@@ -508,23 +512,25 @@ async function handleApi(request, response, url) {
       status: { $nin: ["cancelled"] },
       ...(doctor ? { doctor } : {})
     }).project({ appointmentTime: 1, doctor: 1, _id: 0 }).toArray();
-    const availableTimes = [...new Set(schedulesForDate.flatMap(schedule =>
+    const scheduledTimes = [...new Set(schedulesForDate.flatMap(schedule =>
       getAppointmentTimeSlots(schedule.startTime, schedule.endTime)
-    ))].filter(time => {
-      const availableDoctors = schedulesForDate
-        .filter(schedule => getAppointmentTimeSlots(schedule.startTime, schedule.endTime).includes(time))
-        .map(schedule => schedule.doctor);
-      return !bookedAppointments.some(item =>
-        item.appointmentTime === time && (!doctor || item.doctor === doctor) &&
-        (!availableDoctors.length || availableDoctors.includes(item.doctor))
-      );
-    }).sort();
-    sendJson(response, 200, { success: true, bookedTimes: [], availableTimes });
+    ))].sort();
+    const availableDoctorsByTime = getAvailableDoctorsByTime(schedulesForDate, bookedAppointments);
+    const availableTimes = Object.keys(availableDoctorsByTime).sort();
+    const bookedTimes = scheduledTimes.filter(time => !availableTimes.includes(time));
+    sendJson(response, 200, { success: true, scheduledTimes, bookedTimes, availableTimes, availableDoctorsByTime });
     return;
   }
 
   if (url.pathname === "/api/doctors" && request.method === "GET") {
-    const schedules = await database.collection("doctorSchedules").find().project({ doctor: 1, _id: 0 }).toArray();
+    const date = clean(url.searchParams.get("date"), 10);
+    if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      sendJson(response, 400, { success: false, errors: ["A valid date is required."] });
+      return;
+    }
+    const schedules = await database.collection("doctorSchedules")
+      .find(date ? { day: appointmentWeekday(date) } : {})
+      .project({ doctor: 1, _id: 0 }).toArray();
     sendJson(response, 200, { success: true, doctors: [...new Set(schedules.map(item => item.doctor).filter(Boolean))].sort() });
     return;
   }
@@ -710,6 +716,53 @@ async function handleApi(request, response, url) {
     }
     const result = await database.collection("doctorSchedules").insertOne(record);
     sendJson(response, 201, { success: true, message: "Doctor schedule saved.", scheduleId: result.insertedId });
+    return;
+  }
+
+  const scheduleMatch = url.pathname.match(/^\/api\/schedules\/([^/]+)$/);
+  if (scheduleMatch && (request.method === "PUT" || request.method === "DELETE")) {
+    if (!requireRole(request, response, "admin")) return;
+    if (!ObjectId.isValid(scheduleMatch[1])) {
+      sendJson(response, 400, { success: false, errors: ["Invalid schedule ID."] });
+      return;
+    }
+
+    const scheduleId = new ObjectId(scheduleMatch[1]);
+    const doctorSchedules = database.collection("doctorSchedules");
+    if (request.method === "DELETE") {
+      const result = await doctorSchedules.deleteOne({ _id: scheduleId });
+      sendJson(response, result.deletedCount ? 200 : 404, {
+        success: Boolean(result.deletedCount),
+        message: result.deletedCount ? "Doctor schedule deleted." : "Doctor schedule not found."
+      });
+      return;
+    }
+
+    const payload = JSON.parse(await readRequestBody(request) || "{}");
+    const record = {
+      doctor: clean(payload.doctor, 100),
+      day: clean(payload.day, 20),
+      startTime: clean(payload.startTime, 5),
+      endTime: clean(payload.endTime, 5)
+    };
+    const startMinutes = normalizeAppointmentTime(record.startTime);
+    const endMinutes = normalizeAppointmentTime(record.endTime);
+    if (!record.doctor || !record.day || !startMinutes || !endMinutes ||
+        !["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].includes(record.day) ||
+        !isClinicTimeAvailable(startMinutes) || !isClinicTimeAvailable(endMinutes) ||
+        startMinutes >= endMinutes || !getAppointmentTimeSlots(startMinutes, endMinutes).length) {
+      sendJson(response, 400, { success: false, errors: ["Choose a doctor and day, and enter a valid clinic shift using 30-minute times between 9:00 AM and 7:00 PM."] });
+      return;
+    }
+
+    const result = await doctorSchedules.updateOne(
+      { _id: scheduleId },
+      { $set: { ...record, updatedAt: new Date() } }
+    );
+    sendJson(response, result.matchedCount ? 200 : 404, {
+      success: Boolean(result.matchedCount),
+      message: result.matchedCount ? "Doctor schedule updated." : "Doctor schedule not found."
+    });
     return;
   }
 

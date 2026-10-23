@@ -67,8 +67,11 @@ Open:
 - Session-protected admin API
 - Appointment status updates: pending, confirmed, completed, cancelled
 - Duplicate appointment time protection
-- Public date availability endpoint
-- Doctor-specific appointment availability based on saved schedules
+- Public date availability endpoint with 30-minute slots and booked-slot reporting
+- Booking offers available 30-minute times within the scheduled dentists' shifts; selecting a time automatically assigns a dentist who is scheduled and free then
+- If multiple dentists are scheduled at that time, the available dentist is assigned automatically; a booked dentist slot is not offered for that dentist
+- Admin doctor schedules use full-day, morning (ending at 1:00 PM or 2:00 PM), or afternoon shift presets
+- Admins can edit or delete saved doctor schedules from the schedule list
 - Admin appointment deletion with a confirmation prompt
 - Dashboard appointment search and summary counts
 - Analytics endpoint: `GET /api/analytics`
